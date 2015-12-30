@@ -1,3 +1,4 @@
+# bundle exec ruby app.rb
 require 'twilio-ruby'
 require 'sinatra'
 require 'sinatra/json'
@@ -18,7 +19,7 @@ get '/token' do
   device_id = params['device']
 
   # Create a random username for the client
-  identity = Faker::Internet.user_name
+  identity = 'pat'#Faker::Internet.user_name
 
   # Create a unique ID for the currently connecting device
   endpoint_id = "TwilioDemoApp:#{identity}:#{device_id}"
