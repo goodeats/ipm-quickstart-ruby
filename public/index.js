@@ -59,7 +59,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTE3NTE2MDMiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MTc1NTIwMywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.ISfHm_zxnAQ_dZS9RItNKOCngaefSNkbEwkWSbhvn84';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTE3NTU0MTIiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MTc1OTAxMiwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.YK-DhyQRic44IDKuB1Y5UxmiD96jnah6ZbXqTn5vT4c';
 
       // Alert the user they have been assigned a random username
       username = data.identity;
@@ -74,14 +74,37 @@ $(function() {
 
     function init(){
       console.log('Initialized');
-      findOrCreateChannel();
+      getChannels();
     }
 
-    function findOrCreateChannel(){
+    function getChannels(){
+      // Get Messages for a previously created channel
+      messagingClient.getChannels().then(function(channels) {
+        for (i=0; i<channels.length; i++) {
+          var channel = channels[i];
+          var channelButton = '<button id="' + channel.uniqueName + '" class="join">' + channel.friendlyName + '</button>';
+          $('#messages').append(channelButton);
+        }
+        prepareJoinButton();
+      });
+    }
+
+    function prepareJoinButton(){
+      $('.join').on('click', function(){
+        var ch = $(this).text();
+        console.log('joining: ' + ch);
+        var uniqueChannel = $(this).attr('id');
+        findOrCreateChannel(uniqueChannel);
+      });
+    }
+
+
+
+    function findOrCreateChannel(uniqueChannel){
       // Get the general chat channel, which is where all the messages are
       // sent in this simple application
       print('Attempting to join "general" chat channel...');
-      var promise = messagingClient.getChannelByUniqueName('general');
+      var promise = messagingClient.getChannelByUniqueName(uniqueChannel);
       promise.then(function(channel) {
         generalChannel = channel;
 
@@ -162,14 +185,6 @@ $(function() {
       //     console.log("Deleted channel: " + channel.sid);
       //   });
       // });
-
-      // Get Messages for a previously created channel
-      messagingClient.getChannels().then(function(channels) {
-        for (i=0; i<channels.length; i++) {
-          var channel = channels[i];
-          console.log('Channel: ' + channel.friendlyName);
-        }
-      });
 
       // A channel has become visible to the Client
       messagingClient.on('channelAdded', function(channel) {
