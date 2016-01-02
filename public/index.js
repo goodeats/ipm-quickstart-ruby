@@ -57,7 +57,7 @@ $(function() {
       identity: username,
       device: 'browser'
     }, function(data) {
-      // testing localhost:4567 needs token generated here:
+      // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
       data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTE3NTE2MDMiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MTc1NTIwMywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.ISfHm_zxnAQ_dZS9RItNKOCngaefSNkbEwkWSbhvn84';
 
@@ -69,7 +69,15 @@ $(function() {
       // Initialize the IP messaging client
       accessManager = new Twilio.AccessManager(data.token);
       messagingClient = new Twilio.IPMessaging.Client(accessManager);
+      init();
+    });
 
+    function init(){
+      console.log('Initialized');
+      findOrCreateChannel();
+    }
+
+    function findOrCreateChannel(){
       // Get the general chat channel, which is where all the messages are
       // sent in this simple application
       print('Attempting to join "general" chat channel...');
@@ -94,7 +102,7 @@ $(function() {
           setupChannel();
         }
       });
-    });
+    }
 
     // Set up channel after it has been found
     function setupChannel() {
