@@ -10,7 +10,7 @@ $(function() {
 
   // A handle to the "general" chat channel - the one and only channel we
   // will have in this sample app
-  var generalChannel;
+  var myChannel;
 
   // The server will assign the client a random username - store that value
   // here
@@ -126,9 +126,9 @@ $(function() {
       print('Attempting to join "general" chat channel...');
       var promise = messagingClient.getChannelByUniqueName(uniqueName);
       promise.then(function(channel) {
-        generalChannel = channel;
+        myChannel = channel;
 
-        if (!generalChannel) {
+        if (!myChannel) {
           // If it doesn't exist, let's create it
           console.log('this channel doesn\'t exist yet');
           messagingClient.createChannel({
@@ -137,12 +137,12 @@ $(function() {
           }).then(function(channel) {
             console.log('Created general channel:');
             console.log(channel);
-            generalChannel = channel;
+            myChannel = channel;
             setupChannel();
           });
         } else {
           console.log('Found channel:');
-          console.log(generalChannel);
+          console.log(myChannel);
           setupChannel();
         }
       });
@@ -151,18 +151,18 @@ $(function() {
     // Set up channel after it has been found
     function setupChannel() {
       // Join the general channel
-      generalChannel.join().then(function(channel) {
+      myChannel.join().then(function(channel) {
         print('Joined ' + channel.friendlyName + ' as '
           + '<span class="me">' + username + '</span>.', true);
       });
 
       // Listen for new messages sent to the channel
-      generalChannel.on('messageAdded', function(message) {
+      myChannel.on('messageAdded', function(message) {
         printMessage(message.author, message.body);
       });
 
       // Get Messages for a previously created channel
-      generalChannel.getMessages().then(function(messages) {
+      myChannel.getMessages().then(function(messages) {
         var totalMessages = messages.length;
         for (i=0; i<messages.length; i++) {
           var message = messages[i];
@@ -176,7 +176,7 @@ $(function() {
       invite_button.on('click', function(e){
         e.preventDefault();
         // Invite another member to your channel
-        generalChannel.invite('pat').then(function() {
+        myChannel.invite('pat').then(function() {
           console.log('Your friend has been invited!');
         });
       });
@@ -193,7 +193,7 @@ $(function() {
         e.preventDefault();
         console.log('I want to leave');
         // leave another member to your channel
-        generalChannel.leave('rick').then(function() {
+        myChannel.leave('rick').then(function() {
           console.log('Your friend rick has left!');
         });
       });
@@ -202,7 +202,7 @@ $(function() {
       // delete_button.on('click', function(e){
       //   e.preventDefault();
       //   // Delete a previously created Channel
-      //   generalChannel.delete().then(function(channel) {
+      //   myChannel.delete().then(function(channel) {
       //     console.log("Deleted channel: " + channel.sid);
       //   });
       // });
@@ -221,20 +221,20 @@ $(function() {
       });
 
       // Listen for members joining a channel
-      generalChannel.on('memberJoined', function(member) {
+      myChannel.on('memberJoined', function(member) {
         console.log(member.identity + 'has joined the channel.');
         printMessage(member.identity + 'has joined the channel.', message.body);
       });
       // Listen for members joining a channel
-      generalChannel.on('memberLeft', function(member) {
+      myChannel.on('memberLeft', function(member) {
         console.log(member.identity + 'has left the channel.');
       });
       // Listen for members typing
-      generalChannel.on('typingStarted', function(member) {
+      myChannel.on('typingStarted', function(member) {
         console.log(member.identity + 'is currently typing.');
       });
       // Listen for members typing
-      generalChannel.on('typingEnded', function(member) {
+      myChannel.on('typingEnded', function(member) {
         console.log(member.identity + 'has stopped typing.');
       });
     }
@@ -243,7 +243,7 @@ $(function() {
     var $input = $('#chat-input');
     $input.on('keydown', function(e) {
       if (e.keyCode == 13) {
-        generalChannel.sendMessage($input.val());
+        myChannel.sendMessage($input.val());
         $input.val('');
       }
     });
