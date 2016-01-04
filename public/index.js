@@ -18,7 +18,7 @@ $(function() {
   $('.login').on('click', function(){
     // username = $(this).attr('class').replace(' username', '');
     // console.log('username set: ' + username);
-    startChat();
+    initTwilio();
   });
 
   // Helper function to print info messages to the chat window
@@ -46,7 +46,7 @@ $(function() {
     $chatWindow.scrollTop($chatWindow[0].scrollHeight);
   }
 
-  function startChat(){
+  function initTwilio(){
     // Alert the user they have been assigned a random username
     print('Logging in...');
 
@@ -85,12 +85,12 @@ $(function() {
           var channelButton = '<button id="' + channel.uniqueName + '" class="join">' + channel.friendlyName + '</button>';
           $('#messages').append(channelButton);
         }
-        addCreateChannel();
+        createChannel();
         prepareJoinButton();
       });
     }
 
-    function addCreateChannel(){
+    function createChannel(){
       console.log('adding a channel');
       // var form = '<form class="new-channel" onsubmit="return false"></form>'; // channel won't join unless refreshed :/
       var form = '<form class="new-channel"></form>';
@@ -140,29 +140,39 @@ $(function() {
             console.log('Created general channel:');
             console.log(channel);
             myChannel = channel;
-            setupChannel();
+            joinChannel();
           });
         } else {
           console.log('Found channel:');
           console.log(myChannel);
-          setupChannel();
+          joinChannel();
         }
       });
     }
 
     // Set up channel after it has been found
-    function setupChannel() {
+    function joinChannel() {
       // Join the general channel
       myChannel.join().then(function(channel) {
         print('Joined ' + channel.friendlyName + ' as '
           + '<span class="me">' + username + '</span>.', true);
+        initChannelOptions();
       });
+    }
 
-      // Listen for new messages sent to the channel
-      myChannel.on('messageAdded', function(message) {
-        printMessage(message.author, message.body);
-      });
+    function initChannelOptions(){
+      getMessages();
+      messagesListener();
+      sendMessage();
+      invitesListener();
+      inviteToChannel();
+      leaveChannel();
+      deleteChannel();
+      handleChannelEvents();
+      handleMemberEvents();
+    }
 
+    function getMessages(){
       // Get Messages for a previously created channel
       myChannel.getMessages().then(function(messages) {
         var totalMessages = messages.length;
@@ -173,23 +183,50 @@ $(function() {
         }
         console.log('Total Messages:' + totalMessages);
       });
+    }
 
+    function messagesListener(){
+      // Listen for new messages sent to the channel
+      myChannel.on('messageAdded', function(message) {
+        printMessage(message.author, message.body);
+      });
+    }
+
+    function sendMessage(){
+      // Send a new message to the general channel
+      var $input = $('#chat-input');
+      $input.on('keydown', function(e) {
+        if (e.keyCode == 13) {
+          myChannel.sendMessage($input.val());
+          $input.val('');
+        }
+      });
+    }
+
+    function invitesListener(){
+      // Listen for new invitations to your Client
+      console.log('will listen for invites');
+      messagingClient.on('channelInvited', function(channel) {
+        console.log('Invited to channel ' + channel.friendlyName);
+        // Join the channel that you were invited to
+        // Joins automatically right now
+        channel.join();
+      });
+    }
+
+    function inviteToChannel(){
+      console.log('preparing invites');
       var invite_button = $('.invite');
       invite_button.on('click', function(e){
         e.preventDefault();
         // Invite another member to your channel
-        myChannel.invite('pat').then(function() {
+        myChannel.invite('rick').then(function() {
           console.log('Your friend has been invited!');
         });
       });
+    }
 
-      // Listen for new invitations to your Client
-      messagingClient.on('channelInvited', function(channel) {
-        console.log('Invited to channel ' + channel.friendlyName);
-        // Join the channel that you were invited to
-        channel.join();
-      });
-
+    function leaveChannel(){
       var leave_button = $('.leave');
       leave_button.on('click', function(e){
         e.preventDefault();
@@ -199,16 +236,20 @@ $(function() {
           console.log('Your friend rick has left!');
         });
       });
+    }
 
-      // var delete_button = $('.delete');
-      // delete_button.on('click', function(e){
-      //   e.preventDefault();
-      //   // Delete a previously created Channel
-      //   myChannel.delete().then(function(channel) {
-      //     console.log("Deleted channel: " + channel.sid);
-      //   });
-      // });
+    function deleteChannel(){
+      var delete_button = $('.delete');
+      delete_button.on('click', function(e){
+        e.preventDefault();
+        // Delete a previously created Channel
+        myChannel.delete().then(function(channel) {
+          console.log("Deleted channel: " + channel.sid);
+        });
+      });
+    }
 
+    function handleChannelEvents(){
       // A channel has become visible to the Client
       messagingClient.on('channelAdded', function(channel) {
         console.log('Channel added: ' + channel.friendlyName);
@@ -221,7 +262,9 @@ $(function() {
       messagingClient.on('channelUpdated', function(channel) {
         console.log('Channel updates: ' + channel.sid);
       });
+    }
 
+    function handleMemberEvents(){
       // Listen for members joining a channel
       myChannel.on('memberJoined', function(member) {
         console.log(member.identity + 'has joined the channel.');
@@ -241,14 +284,6 @@ $(function() {
       });
     }
 
-    // Send a new message to the general channel
-    var $input = $('#chat-input');
-    $input.on('keydown', function(e) {
-      if (e.keyCode == 13) {
-        myChannel.sendMessage($input.val());
-        $input.val('');
-      }
-    });
   }
 
 });
