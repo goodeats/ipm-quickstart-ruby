@@ -59,7 +59,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTE3NTkxNDEiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MTc2Mjc0MSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.2iP6ArQ55fESGPGSLQKTsGRHj2dpbdXXYo_PG7YPMTA';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTE4Nzg4NjYiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MTg4MjQ2NiwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.I_AN14z_TZU6o7riis4pbxXjuQGIy_en9DukgqmDcYk';
 
       // Alert the user they have been assigned a random username
       username = data.identity;
@@ -92,9 +92,10 @@ $(function() {
 
     function addCreateChannel(){
       console.log('adding a channel');
-      var form = '<form class="new-channel" onsubmit="return false"></form>';
-      var uniqueName = '<input class="uniqueName" type="text"></input>';
-      var friendlyName = '<input class="friendlyName" type="text"></input>';
+      // var form = '<form class="new-channel" onsubmit="return false"></form>'; // channel won't join unless refreshed :/
+      var form = '<form class="new-channel"></form>';
+      var uniqueName = '<input class="uniqueName" type="text" placeholder="create unique name"></input>';
+      var friendlyName = '<input class="friendlyName" type="text" placeholder="create friendly name"></input>';
       var submit = '<input type="submit"></input>';
       $('#messages').append(form);
       $('.new-channel').append(uniqueName).append(friendlyName).append(submit);
@@ -116,6 +117,7 @@ $(function() {
         e.preventDefault;
         var uniqueName = $('.uniqueName').val();
         var friendlyName = $('.friendlyName').val();
+        console.log('creating a channel');
         findOrCreateChannel(uniqueName, friendlyName);
       });
     }
@@ -123,7 +125,7 @@ $(function() {
     function findOrCreateChannel(uniqueName, friendlyName){
       // Get the general chat channel, which is where all the messages are
       // sent in this simple application
-      print('Attempting to join "general" chat channel...');
+      print('Attempting to join "' + uniqueName + '" chat channel...');
       var promise = messagingClient.getChannelByUniqueName(uniqueName);
       promise.then(function(channel) {
         myChannel = channel;
