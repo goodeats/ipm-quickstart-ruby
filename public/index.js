@@ -59,7 +59,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTE4Nzg4NjYiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MTg4MjQ2NiwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.I_AN14z_TZU6o7riis4pbxXjuQGIy_en9DukgqmDcYk';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTE5NTI2MzgiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MTk1NjIzOCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.IhdaFJXaM1j8Tl9KO9yl0Wfycie6LAGxiy5eK1i-MKg';
 
       // Alert the user they have been assigned a random username
       username = data.identity;
@@ -74,7 +74,38 @@ $(function() {
 
     function init(){
       console.log('Initialized');
+      invitesListener();
+      channelEventsListener();
       getChannels();
+    }
+
+    function invitesListener(){
+      // Listen for new invitations to your Client
+      console.log('will listen for invites');
+      messagingClient.on('channelInvited', function(channel) {
+        console.log('Invited to channel ' + channel.friendlyName);
+        // Join the channel that you were invited to
+        // Joins automatically right now
+        channel.join();
+      });
+    }
+
+    function channelEventsListener(){
+      // A channel has become visible to the Client
+      messagingClient.on('channelAdded', function(channel) {
+        print('Channel added: ' + channel.friendlyName, true);
+        console.log('Channel added: ' + channel.friendlyName);
+      });
+      // A channel is no longer visible to the Client
+      messagingClient.on('channelRemoved', function(channel) {
+        print('Channel removed: ' + channel.friendlyName, true);
+        console.log('Channel removed: ' + channel.friendlyName);
+      });
+      // A channel's attributes or metadata have changed.
+      messagingClient.on('channelUpdated', function(channel) {
+        print('Channel updates for ' + channel.friendlyName + ': ' + channel.sid, true);
+        console.log('Channel updates: ' + channel.sid);
+      });
     }
 
     function getChannels(){
@@ -161,15 +192,14 @@ $(function() {
     }
 
     function initChannelOptions(){
+      console.log('init channel options');
       getMessages();
       messagesListener();
       sendMessage();
-      invitesListener();
       inviteToChannel();
       leaveChannel();
       deleteChannel();
-      handleChannelEvents();
-      handleMemberEvents();
+      memberEventsListener();
     }
 
     function getMessages(){
@@ -203,17 +233,6 @@ $(function() {
       });
     }
 
-    function invitesListener(){
-      // Listen for new invitations to your Client
-      console.log('will listen for invites');
-      messagingClient.on('channelInvited', function(channel) {
-        console.log('Invited to channel ' + channel.friendlyName);
-        // Join the channel that you were invited to
-        // Joins automatically right now
-        channel.join();
-      });
-    }
-
     function inviteToChannel(){
       console.log('preparing invites');
       var invite_button = $('.invite');
@@ -232,7 +251,8 @@ $(function() {
         e.preventDefault();
         console.log('I want to leave');
         // leave another member to your channel
-        myChannel.leave('rick').then(function() {
+        myChannel.leave(username).then(function(member) {
+          debugger
           console.log('Your friend rick has left!');
         });
       });
@@ -249,38 +269,28 @@ $(function() {
       });
     }
 
-    function handleChannelEvents(){
-      // A channel has become visible to the Client
-      messagingClient.on('channelAdded', function(channel) {
-        console.log('Channel added: ' + channel.friendlyName);
-      });
-      // A channel is no longer visible to the Client
-      messagingClient.on('channelRemoved', function(channel) {
-        console.log('Channel removed: ' + channel.friendlyName);
-      });
-      // A channel's attributes or metadata have changed.
-      messagingClient.on('channelUpdated', function(channel) {
-        console.log('Channel updates: ' + channel.sid);
-      });
-    }
-
-    function handleMemberEvents(){
+    function memberEventsListener(){
       // Listen for members joining a channel
-      myChannel.on('memberJoined', function(member) {
-        console.log(member.identity + 'has joined the channel.');
-        printMessage(member.identity + 'has joined the channel.', message.body);
+      myChannel.on('memberJoined', function(member, messages) {
+        print(member.identity + ' has joined the channel.', true);
+        debugger
+        for (i=0; i<messages.length; i++) {
+          var message = messages[i];
+          console.log('Author:' + message.author);
+          printMessage(member.identity + 'has joined the channel.', message.body);
+        }
       });
       // Listen for members joining a channel
       myChannel.on('memberLeft', function(member) {
-        console.log(member.identity + 'has left the channel.');
+        print(member.identity + 'has left the channel.', true);
       });
       // Listen for members typing
       myChannel.on('typingStarted', function(member) {
-        console.log(member.identity + 'is currently typing.');
+        print(member.identity + 'is currently typing.', true);
       });
       // Listen for members typing
       myChannel.on('typingEnded', function(member) {
-        console.log(member.identity + 'has stopped typing.');
+        print(member.identity + 'has stopped typing.', true);
       });
     }
 
