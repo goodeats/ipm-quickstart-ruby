@@ -1,7 +1,10 @@
 $(function() {
   // Get handle to the chat div
-  var $chatWindow = $('#messages');
+  var $chatWindow = $('#init_messages');
+  var header = $('.nav-header');
+  var windowHeader = $('.nav-channel-title');
 
+  var activeChannels = [$('#init_messages')];
   // Manages the state of our access token we got from the server
   var accessManager;
 
@@ -22,14 +25,14 @@ $(function() {
   });
 
   // Helper function to print info messages to the chat window
-  function print(infoMessage, asHtml) {
+  function print(infoMessage, asHtml, container) {
     var $msg = $('<div class="info">');
     if (asHtml) {
       $msg.html(infoMessage);
     } else {
       $msg.text(infoMessage);
     }
-    $chatWindow.append($msg);
+    container.append($msg);
   }
 
   // Helper function to print chat message to the chat window
@@ -48,7 +51,8 @@ $(function() {
 
   function initTwilio(){
     // Alert the user they have been assigned a random username
-    print('Logging in...');
+    $('.login').remove();
+    windowHeader.text('Logging in...');
 
     // Get an access token for the current user, passing a username (identity)
     // and a device ID - for browser-based apps, we'll always just use the
@@ -59,12 +63,12 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTIwMzg2NjciLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjA0MjI2NywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.ThXDDmE6Nm-U_wmcgaw7NsUOnNg7iVAm65pMUAU4Njg';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTIwNTIxMzciLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjA1NTczNywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.ZiGK0u_oH_t3Px0t7Q1lh3uKOXFfj6aqzp6yh6ZyYE4';
 
+      $('.info').remove();
       // Alert the user they have been assigned a random username
       username = data.identity;
-      print('You have been assigned a random username of: ' +
-        '<span class="me">' + username + '</span>', true);
+      windowHeader.text('Welcome ' + username + '!');
 
       // Initialize the IP messaging client
       accessManager = new Twilio.AccessManager(data.token);
@@ -83,7 +87,7 @@ $(function() {
       // Listen for new invitations to your Client
       console.log('will listen for invites');
       messagingClient.on('channelInvited', function(channel) {
-        print('Invited to channel ' + channel.friendlyName, true);
+        print('Invited to channel ' + channel.friendlyName, true, $chatWindow);
         // Join the channel that you were invited to
         // Joins automatically right now
         channel.join();
@@ -93,15 +97,15 @@ $(function() {
     function channelEventsListener(){
       // A channel has become visible to the Client
       messagingClient.on('channelAdded', function(channel) {
-        print('Channel added: ' + channel.friendlyName, true);
+        print('Channel added: ' + channel.friendlyName, true, $chatWindow);
       });
       // A channel is no longer visible to the Client
       messagingClient.on('channelRemoved', function(channel) {
-        print('Channel removed: ' + channel.friendlyName, true);
+        print('Channel removed: ' + channel.friendlyName, true, $chatWindow);
       });
       // A channel's attributes or metadata have changed.
       messagingClient.on('channelUpdated', function(channel) {
-        console.log('Channel updates for ' + channel.friendlyName + ': ' + channel.sid);
+        // console.log('Channel updates for ' + channel.friendlyName + ': ' + channel.sid);
       });
     }
 
@@ -109,33 +113,32 @@ $(function() {
     function getChannels(){
       // Get Messages for a previously created channel
       messagingClient.getChannels().then(function(channels) {
+        for (i=0; i<channels.length; i++) {
+          var channel = channels[i];
+          var channelButton = '<button id="' + channel.uniqueName + '" class="join">' + channel.friendlyName + '</button>';
+          $('#sidebar').append(channelButton);
+        }
         if (firstTime){
           firstTime = false;
-          for (i=0; i<channels.length; i++) {
-            var channel = channels[i];
-            var channelButton = '<button id="' + channel.uniqueName + '" class="join">' + channel.friendlyName + '</button>';
-            $('#messages').append(channelButton);
-          }
-          createChannel();
-          prepareJoinButton();
+          createChannelForm();
+          joinExistingChannel();
         } else {
           joinChannel();
         }
       });
     }
 
-    function createChannel(){
-      console.log('adding a channel');
-      var form = '<form class="new-channel" onsubmit="return false"></form>';
+    function createChannelForm(){
+      var form = '<p>Create a new channel</p><form class="new-channel" onsubmit="return false"></form>';
       var uniqueName = '<input class="uniqueName" type="text" placeholder="create unique name"></input>';
       var friendlyName = '<input class="friendlyName" type="text" placeholder="create friendly name"></input>';
       var submit = '<input type="submit"></input>';
-      $('#messages').append(form);
+      $('#sidebar').append(form);
       $('.new-channel').append(uniqueName).append(friendlyName).append(submit);
-      prepareNewChannelForm();
+      joinNewChannel();
     }
 
-    function prepareJoinButton(){
+    function joinExistingChannel(){
       $('.join').on('click', function(){
         var ch = $(this).text();
         console.log('joining: ' + ch);
@@ -145,7 +148,7 @@ $(function() {
       });
     }
 
-    function prepareNewChannelForm(){
+    function joinNewChannel(){
       $('.new-channel').on('submit', function(e){
         e.preventDefault;
         var uniqueName = $('.uniqueName').val();
@@ -156,7 +159,7 @@ $(function() {
     }
 
     function findOrCreateChannel(uniqueName, friendlyName){
-      print('Attempting to join "' + uniqueName + '" chat channel...');
+      print('Attempting to join "' + uniqueName + '" chat channel...', false, $chatWindow);
       var promise = messagingClient.getChannelByUniqueName(uniqueName);
       promise.then(function(channel) {
         myChannel = channel;
@@ -168,12 +171,14 @@ $(function() {
             uniqueName: uniqueName,
             friendlyName: friendlyName
           }).then(function(channel) {
-            print('Created "' + channel.friendlyName + '" channel', true);
+            windowHeader.text(channel.friendlyName);
+            print('Created "' + channel.friendlyName + '" channel', true, $chatWindow);
             myChannel = channel;
             getChannels();
           });
         } else {
-          print('Found "' + channel.friendlyName + '" channel');
+          $('.info').remove();
+          windowHeader.text(channel.friendlyName);
           console.log('this channel: ', myChannel);
           joinChannel();
         }
@@ -182,7 +187,7 @@ $(function() {
 
     function joinChannel() {
       myChannel.join().then(function(channel) {
-        print('Joined ' + channel.friendlyName + ' as <span class="me">' + username + '</span>.', true);
+        print('Joined ' + channel.friendlyName + ' as <span class="me">' + username + '</span>.', true, $chatWindow);
         initChannelOptions();
       });
     }
@@ -201,7 +206,7 @@ $(function() {
     function getMessages(){
       myChannel.getMessages().then(function(messages) {
         var totalMessages = messages.length;
-        print('Total Messages: ' + totalMessages, true);
+        print('Total Messages: ' + totalMessages, true, $chatWindow);
         for (i=0; i<messages.length; i++) {
           var message = messages[i];
           printMessage(message.author, message.body);
@@ -264,7 +269,7 @@ $(function() {
     function memberEventsListener(){
       // Listen for members joining a channel
       myChannel.on('memberJoined', function(member, messages) {
-        print(member.identity + ' has joined the channel.', true);
+        print(member.identity + ' has joined the channel.', true, $chatWindow);
         for (i=0; i<messages.length; i++) {
           var message = messages[i];
           console.log('Author:' + message.author);
@@ -273,15 +278,15 @@ $(function() {
       });
       // Listen for members joining a channel
       myChannel.on('memberLeft', function(member) {
-        print(member.identity + ' has left the channel.', true);
+        print(member.identity + ' has left the channel.', true, $chatWindow);
       });
       // Listen for members typing
       myChannel.on('typingStarted', function(member) {
-        print(member.identity + ' is currently typing.', true);
+        print(member.identity + ' is currently typing.', true, $chatWindow);
       });
       // Listen for members typing
       myChannel.on('typingEnded', function(member) {
-        print(member.identity + ' has stopped typing.', true);
+        print(member.identity + ' has stopped typing.', true, $chatWindow);
       });
     }
 

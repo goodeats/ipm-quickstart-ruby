@@ -7,27 +7,28 @@
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
+  <header class="nav-header">
+    <span class="nav-app-title">OpenCity</span>
+    <span class="nav-channel-title"></span>
+    <button type="button" class="login">login</button>
+  </header>
 
   <div id="page-wrapper">
-    <header class="nav-header">
-      <span class="nav-app-title">OpenCity</span>
-      <span class="nav-channel-title">Login</span>
-    </header>
     <div id="sidebar">
-
+      <p>sidebarrrr matey</p>
     </div>
 
-    <div id="content">
-      <section>
-        <div id="messages"></div>
+    <div id="content-wrapper">
+      <div id="content">
+        <div id="init_messages" class="messages">
+          <p style="float:right;">messages go here</p>
+        </div>
         <input id="chat-input" type="text" placeholder="say anything" autofocus/>
-      </section>
-
-      <div>
-        <button type="button" class="login">login</button>
-        <button type="button" class="invite">Invite</button>
-        <button type="button" class="leave">Leave</button>
-        <button type="button" class="delete">Delete</button>
+        <div class="channel-buttons">
+          <button type="button" class="invite">Invite</button>
+          <button type="button" class="leave">Leave</button>
+          <button type="button" class="delete">Delete</button>
+        </div>
       </div>
     </div>
   </div>
