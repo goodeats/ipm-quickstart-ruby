@@ -59,7 +59,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTE5NTI2MzgiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MTk1NjIzOCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.IhdaFJXaM1j8Tl9KO9yl0Wfycie6LAGxiy5eK1i-MKg';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTIwMzg2NjciLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjA0MjI2NywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.ThXDDmE6Nm-U_wmcgaw7NsUOnNg7iVAm65pMUAU4Njg';
 
       // Alert the user they have been assigned a random username
       username = data.identity;
@@ -83,7 +83,7 @@ $(function() {
       // Listen for new invitations to your Client
       console.log('will listen for invites');
       messagingClient.on('channelInvited', function(channel) {
-        console.log('Invited to channel ' + channel.friendlyName);
+        print('Invited to channel ' + channel.friendlyName, true);
         // Join the channel that you were invited to
         // Joins automatically right now
         channel.join();
@@ -94,37 +94,39 @@ $(function() {
       // A channel has become visible to the Client
       messagingClient.on('channelAdded', function(channel) {
         print('Channel added: ' + channel.friendlyName, true);
-        console.log('Channel added: ' + channel.friendlyName);
       });
       // A channel is no longer visible to the Client
       messagingClient.on('channelRemoved', function(channel) {
         print('Channel removed: ' + channel.friendlyName, true);
-        console.log('Channel removed: ' + channel.friendlyName);
       });
       // A channel's attributes or metadata have changed.
       messagingClient.on('channelUpdated', function(channel) {
-        print('Channel updates for ' + channel.friendlyName + ': ' + channel.sid, true);
-        console.log('Channel updates: ' + channel.sid);
+        console.log('Channel updates for ' + channel.friendlyName + ': ' + channel.sid);
       });
     }
 
+    var firstTime = true;
     function getChannels(){
       // Get Messages for a previously created channel
       messagingClient.getChannels().then(function(channels) {
-        for (i=0; i<channels.length; i++) {
-          var channel = channels[i];
-          var channelButton = '<button id="' + channel.uniqueName + '" class="join">' + channel.friendlyName + '</button>';
-          $('#messages').append(channelButton);
+        if (firstTime){
+          firstTime = false;
+          for (i=0; i<channels.length; i++) {
+            var channel = channels[i];
+            var channelButton = '<button id="' + channel.uniqueName + '" class="join">' + channel.friendlyName + '</button>';
+            $('#messages').append(channelButton);
+          }
+          createChannel();
+          prepareJoinButton();
+        } else {
+          joinChannel();
         }
-        createChannel();
-        prepareJoinButton();
       });
     }
 
     function createChannel(){
       console.log('adding a channel');
-      // var form = '<form class="new-channel" onsubmit="return false"></form>'; // channel won't join unless refreshed :/
-      var form = '<form class="new-channel"></form>';
+      var form = '<form class="new-channel" onsubmit="return false"></form>';
       var uniqueName = '<input class="uniqueName" type="text" placeholder="create unique name"></input>';
       var friendlyName = '<input class="friendlyName" type="text" placeholder="create friendly name"></input>';
       var submit = '<input type="submit"></input>';
@@ -154,8 +156,6 @@ $(function() {
     }
 
     function findOrCreateChannel(uniqueName, friendlyName){
-      // Get the general chat channel, which is where all the messages are
-      // sent in this simple application
       print('Attempting to join "' + uniqueName + '" chat channel...');
       var promise = messagingClient.getChannelByUniqueName(uniqueName);
       promise.then(function(channel) {
@@ -168,25 +168,21 @@ $(function() {
             uniqueName: uniqueName,
             friendlyName: friendlyName
           }).then(function(channel) {
-            console.log('Created general channel:');
-            console.log(channel);
+            print('Created "' + channel.friendlyName + '" channel', true);
             myChannel = channel;
-            joinChannel();
+            getChannels();
           });
         } else {
-          console.log('Found channel:');
-          console.log(myChannel);
+          print('Found "' + channel.friendlyName + '" channel');
+          console.log('this channel: ', myChannel);
           joinChannel();
         }
       });
     }
 
-    // Set up channel after it has been found
     function joinChannel() {
-      // Join the general channel
       myChannel.join().then(function(channel) {
-        print('Joined ' + channel.friendlyName + ' as '
-          + '<span class="me">' + username + '</span>.', true);
+        print('Joined ' + channel.friendlyName + ' as <span class="me">' + username + '</span>.', true);
         initChannelOptions();
       });
     }
@@ -203,27 +199,23 @@ $(function() {
     }
 
     function getMessages(){
-      // Get Messages for a previously created channel
       myChannel.getMessages().then(function(messages) {
         var totalMessages = messages.length;
+        print('Total Messages: ' + totalMessages, true);
         for (i=0; i<messages.length; i++) {
           var message = messages[i];
-          console.log('Author:' + message.author);
           printMessage(message.author, message.body);
         }
-        console.log('Total Messages:' + totalMessages);
       });
     }
 
     function messagesListener(){
-      // Listen for new messages sent to the channel
       myChannel.on('messageAdded', function(message) {
         printMessage(message.author, message.body);
       });
     }
 
     function sendMessage(){
-      // Send a new message to the general channel
       var $input = $('#chat-input');
       $input.on('keydown', function(e) {
         if (e.keyCode == 13) {
@@ -234,13 +226,14 @@ $(function() {
     }
 
     function inviteToChannel(){
-      console.log('preparing invites');
+      console.log('ready to invite');
       var invite_button = $('.invite');
       invite_button.on('click', function(e){
         e.preventDefault();
+        // TODO: add input for username so not hard-coded as 'rick'
         // Invite another member to your channel
-        myChannel.invite('rick').then(function() {
-          console.log('Your friend has been invited!');
+        myChannel.invite('rick').then(function(member) {
+          console.log('Your friend "' + member.identity + '" has been invited!');
         });
       });
     }
@@ -252,8 +245,7 @@ $(function() {
         console.log('I want to leave');
         // leave another member to your channel
         myChannel.leave(username).then(function(member) {
-          debugger
-          console.log('Your friend rick has left!');
+          console.log('Your friend "' + member.identity + '" has left!');
         });
       });
     }
@@ -273,7 +265,6 @@ $(function() {
       // Listen for members joining a channel
       myChannel.on('memberJoined', function(member, messages) {
         print(member.identity + ' has joined the channel.', true);
-        debugger
         for (i=0; i<messages.length; i++) {
           var message = messages[i];
           console.log('Author:' + message.author);
@@ -282,15 +273,15 @@ $(function() {
       });
       // Listen for members joining a channel
       myChannel.on('memberLeft', function(member) {
-        print(member.identity + 'has left the channel.', true);
+        print(member.identity + ' has left the channel.', true);
       });
       // Listen for members typing
       myChannel.on('typingStarted', function(member) {
-        print(member.identity + 'is currently typing.', true);
+        print(member.identity + ' is currently typing.', true);
       });
       // Listen for members typing
       myChannel.on('typingEnded', function(member) {
-        print(member.identity + 'has stopped typing.', true);
+        print(member.identity + ' has stopped typing.', true);
       });
     }
 

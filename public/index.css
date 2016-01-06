@@ -8,25 +8,20 @@ html, body {
   height:100%;
   width:100%;
   color:#dedede;
-  background-color: #849091;
+  background-color: #fff;
   font-family: 'Helvetica Neue', Helvetica, sans-serif;
 }
 
-header {
+.nav-header {
   width:100%;
   position:absolute;
   text-align:center;
-  bottom:20px;
+  top:0;
+  font-size: 30px;
 }
 
-header a, header a:visited {
-  font-size:18px;
-  color:#dedede;
-  text-decoration:none;
-}
-
-header a:hover {
-  text-decoration:underline;
+.nav-app-title {
+  float: left;
 }
 
 section {
