@@ -60,7 +60,21 @@ html, body {
 .join {
   height: 40px;
   width: 100%;
+  margin-top: 5px;
+  background: #f0f0f0;
   font-size: 16px;
+  color: #000;
+  text-align: center;
+  line-height: 40px;
+}
+
+.join.pending {
+  background: #f9f9f9;
+}
+
+.join.active {
+  background: blue;
+  color: #fff;
 }
 
 #chat-input {
