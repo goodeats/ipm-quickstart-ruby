@@ -36,15 +36,16 @@ $(function() {
   }
 
   // Helper function to print chat message to the chat window
-  function printMessage(fromUser, message) {
+  function printMessage(fromUser, timestamp, message) {
     var $user = $('<span class="username">').text(fromUser + ':');
 
     if (fromUser === username) {
       $user.addClass('me');
     }
     var $message = $('<span class="message">').text(message);
+    var $timestamp = $('<span class="timestamp">').text(timestamp);
     var $container = $('<div class="message-container">');
-    $container.append($user).append($message);
+    $container.append($user).append($message).append($timestamp);
     $chatWindow.append($container);
     $chatWindow.scrollTop($chatWindow[0].scrollHeight);
   }
@@ -63,7 +64,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTIwNTIxMzciLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjA1NTczNywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.ZiGK0u_oH_t3Px0t7Q1lh3uKOXFfj6aqzp6yh6ZyYE4';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTIxMzE3NzAiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjEzNTM3MCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.eDfqysR5hpu_fLpouu46tadtmQO1AGAz2pjrFi_doXE';
 
       $('.info').remove();
       // Alert the user they have been assigned a random username
@@ -188,8 +189,16 @@ $(function() {
     function joinChannel() {
       myChannel.join().then(function(channel) {
         print('Joined ' + channel.friendlyName + ' as <span class="me">' + username + '</span>.', true, $chatWindow);
+        showAsActiveChannel(channel);
         initChannelOptions();
       });
+    }
+
+    function showAsActiveChannel(channel){
+      $chatWindow.toggleClass('active');
+      var newChatWindow = '<div id="' + channel.uniqueName + '_messages" class="messages active"></div>';
+      $('#content').prepend(newChatWindow);
+      $chatWindow = $('.messages.active');
     }
 
     function initChannelOptions(){
@@ -209,14 +218,14 @@ $(function() {
         print('Total Messages: ' + totalMessages, true, $chatWindow);
         for (i=0; i<messages.length; i++) {
           var message = messages[i];
-          printMessage(message.author, message.body);
+          printMessage(message.author, message.dateUpdated, message.body);
         }
       });
     }
 
     function messagesListener(){
       myChannel.on('messageAdded', function(message) {
-        printMessage(message.author, message.body);
+        printMessage(message.author, message.dateUpdated, message.body);
       });
     }
 
@@ -231,8 +240,8 @@ $(function() {
     }
 
     function inviteToChannel(){
-      console.log('ready to invite');
       var invite_button = $('.invite');
+      invite_button.show();
       invite_button.on('click', function(e){
         e.preventDefault();
         // TODO: add input for username so not hard-coded as 'rick'
@@ -245,6 +254,7 @@ $(function() {
 
     function leaveChannel(){
       var leave_button = $('.leave');
+      leave_button.show();
       leave_button.on('click', function(e){
         e.preventDefault();
         console.log('I want to leave');
@@ -257,6 +267,7 @@ $(function() {
 
     function deleteChannel(){
       var delete_button = $('.delete');
+      delete_button.show();
       delete_button.on('click', function(e){
         e.preventDefault();
         // Delete a previously created Channel
@@ -273,7 +284,7 @@ $(function() {
         for (i=0; i<messages.length; i++) {
           var message = messages[i];
           console.log('Author:' + message.author);
-          printMessage(member.identity + 'has joined the channel.', message.body);
+          printMessage(member.identity + 'has joined the channel.', member.lastConsumptionTimestamp, message.body);
         }
       });
       // Listen for members joining a channel

@@ -77,12 +77,16 @@ html, body {
 }
 
 .messages {
+  display: none;
   background-color: #999;
   padding: 10px;
   height: 80%;
-  /*width:800px;*/
   margin:0 auto;
   overflow-y:auto;
+}
+
+.messages.active {
+  display: block;
 }
 
 .messages p {
@@ -93,6 +97,12 @@ html, body {
 .info {
   margin:5px 0;
   font-style:italic;
+}
+
+.timestamp {
+  margin-left: 15px;
+  font-size: 75%;
+  color: navy;
 }
 
 .message-container {
