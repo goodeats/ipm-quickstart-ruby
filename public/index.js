@@ -14,6 +14,7 @@ $(function() {
   // will have in this sample app
   var myChannel;
   var myChannels = {};
+  var newChannel = false;
 
   // The server will assign the client a random username - store that value
   // here
@@ -62,7 +63,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTIxNzQ1NTciLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjE3ODE1NywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.2PBeRKu-Q1WUNBKEsAHkOVJNxOvPIoCY1bNxLqAgKy8';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTIzNzE0MTEiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjM3NTAxMSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.X9WJMPxA3uxDoiV5IoUC5Na-1510CSt2xgmRJKTIqfE';
 
       $('.info').remove();
       // Alert the user they have been assigned a random username
@@ -114,14 +115,21 @@ $(function() {
       messagingClient.getChannels().then(function(channels) {
         for (i=0; i<channels.length; i++) {
           var channel = channels[i];
-          var channelButton = '<div id="join_' + channel.uniqueName + '" class="join">' + channel.friendlyName + '</div>';
-          $('#sidebar').append(channelButton);
+          if ($('#join_' + channel.uniqueName).length === 0){
+            var channelButton = '<div id="join_' + channel.uniqueName + '" class="join">' + channel.friendlyName + '</div>';
+            $('.channel-container').prepend(channelButton);
+            if (newChannel){
+              newChannel = false;
+              $('#join_' + channel.uniqueName).addClass('pending');
+            }
+          }
         }
         if (firstTime){
           firstTime = false;
           createChannelForm();
-          joinExistingChannel();
+          joinExistingChannelListener();
         } else {
+          joinExistingChannelListener();
           joinChannel();
         }
       });
@@ -137,8 +145,9 @@ $(function() {
       joinNewChannel();
     }
 
-    function joinExistingChannel(){
-      $('.join').on('click', function(){
+    function joinExistingChannelListener(){
+      $('.join').on('click', function(e){
+        e.stopImmediatePropagation();
         var this_button = $(this);
         this_button.addClass('pending');
         var uniqueName = this_button.attr('id').replace('join_', '');
@@ -166,8 +175,6 @@ $(function() {
       var promise = messagingClient.getChannelByUniqueName(uniqueName);
       promise.then(function(channel) {
         myChannel = channel;
-        myChannels[uniqueName] = channel;
-
         if (!myChannel) {
           // If it doesn't exist, let's create it
           console.log('creating a channel');
@@ -178,9 +185,12 @@ $(function() {
             windowHeader.text(channel.friendlyName);
             print('Created "' + channel.friendlyName + '" channel', true);
             myChannel = channel;
+            myChannels[uniqueName] = channel;
+            newChannel = true;
             getChannels();
           });
         } else {
+          myChannels[uniqueName] = channel;
           joinChannel();
         }
       });
@@ -196,7 +206,6 @@ $(function() {
 
     function showAsActiveChannel(channel){
       myChannel = myChannels[channel];
-
       var activate_button = $('#join_' + channel);
       $('.join.active').toggleClass('active');
       activate_button.toggleClass('pending active');
