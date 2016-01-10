@@ -63,7 +63,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTIzODI1OTkiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjM4NjE5OSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.aWnZhaNmeZsmHdmq994kn1mfAipT-oZdWa_Hc-MvUPI';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTI0NjczOTgiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjQ3MDk5OCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.N0MC8-7TqanTKFM1s-Lh3zi0APCHXzjbQ1wKlkhHLfM';
 
       $('.info').remove();
       // Alert the user they have been assigned a random username
@@ -130,11 +130,10 @@ $(function() {
       });
     }
 
-
-
     function joinChannelNow(channel){
       channel.join().then(function(channel) {
         getLastChannelMessage(channel);
+        channelMessagesListener(channel);
       });
     }
 
@@ -177,6 +176,14 @@ $(function() {
         }
       }
       joinExistingChannelListener();
+    }
+
+    function channelMessagesListener(channel){
+      channel.on('messageAdded', function(message, channel) {
+        printMessage(message.author, message.dateUpdated, message.body);
+        var messageChannel = $('#join_' + myChannel.uniqueName);
+        moveToFirst(messageChannel);
+      });
     }
 
     function createChannelForm(){
@@ -269,7 +276,6 @@ $(function() {
       console.log('init \'' + myChannel.friendlyName + '\' channel options');
       getChannelMessages();
       getChannelMembers();
-      messagesListener();
       sendChannelMessage();
       inviteToChannel();
       leaveChannel();
@@ -298,10 +304,8 @@ $(function() {
       }
     }
 
-    function messagesListener(){
-      myChannel.on('messageAdded', function(message, channel) {
-        printMessage(message.author, message.dateUpdated, message.body);
-      });
+    function moveToFirst(item){
+      item.parent().prepend(item);
     }
 
     function sendChannelMessage(){
