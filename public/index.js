@@ -63,7 +63,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTIzNzE0MTEiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjM3NTAxMSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.X9WJMPxA3uxDoiV5IoUC5Na-1510CSt2xgmRJKTIqfE';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTIzODI1OTkiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjM4NjE5OSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.aWnZhaNmeZsmHdmq994kn1mfAipT-oZdWa_Hc-MvUPI';
 
       $('.info').remove();
       // Alert the user they have been assigned a random username
@@ -109,20 +109,15 @@ $(function() {
       });
     }
 
+    var channelCount;
     var firstTime = true;
     function getChannels(){
       // Get Messages for a previously created channel
       messagingClient.getChannels().then(function(channels) {
-        for (i=0; i<channels.length; i++) {
+        channelCount = channels.length;
+        for (i = 0; i < channelCount; i++){
           var channel = channels[i];
-          if ($('#join_' + channel.uniqueName).length === 0){
-            var channelButton = '<div id="join_' + channel.uniqueName + '" class="join">' + channel.friendlyName + '</div>';
-            $('.channel-container').prepend(channelButton);
-            if (newChannel){
-              newChannel = false;
-              $('#join_' + channel.uniqueName).addClass('pending');
-            }
-          }
+          joinChannelNow(channel);
         }
         if (firstTime){
           firstTime = false;
@@ -133,6 +128,55 @@ $(function() {
           joinChannel();
         }
       });
+    }
+
+
+
+    function joinChannelNow(channel){
+      channel.join().then(function(channel) {
+        getLastChannelMessage(channel);
+      });
+    }
+
+    var channelList = [];
+    function getLastChannelMessage(channel){
+      channel.getMessages(1).then(function(messages) {
+        var channelStuff = {};
+        channelStuff.channel = channel;
+        if (messages.length > 0){
+          channelStuff.lastUpdate = messages[0].timestamp;
+        } else {
+          channelStuff.lastUpdate = channel.dateCreated;
+        }
+        channelList.push(channelStuff);
+        sortChannelList();
+      });
+    }
+
+    function sortChannelList(){
+      if (channelCount === channelList.length){
+        channelList.sort(function(a, b){
+          var channelA = a.lastUpdate;
+          var channelB = b.lastUpdate;
+          return channelA > channelB ? 1 : -1;
+        });
+        buildChannelButtons();
+      }
+    }
+
+    function buildChannelButtons(){
+      for (i = 0; i < channelList.length; i++){
+        var channel = channelList[i].channel;
+        if ($('#join_' + channel.uniqueName).length === 0){
+          var channelButton = '<div id="join_' + channel.uniqueName + '" class="join">' + channel.friendlyName + '</div>';
+          $('.channel-container').prepend(channelButton);
+          if (newChannel){
+            newChannel = false;
+            $('#join_' + channel.uniqueName).addClass('pending');
+          }
+        }
+      }
+      joinExistingChannelListener();
     }
 
     function createChannelForm(){
@@ -223,17 +267,17 @@ $(function() {
 
     function initChannelOptions(){
       console.log('init \'' + myChannel.friendlyName + '\' channel options');
-      getMessages();
+      getChannelMessages();
       getChannelMembers();
       messagesListener();
-      sendMessage();
+      sendChannelMessage();
       inviteToChannel();
       leaveChannel();
       deleteChannel();
       memberEventsListener();
     }
 
-    function getMessages(){
+    function getChannelMessages(){
       myChannel.getMessages().then(function(messages) {
         var totalMessages = messages.length;
         print('Total Messages: ' + totalMessages, true);
@@ -260,7 +304,7 @@ $(function() {
       });
     }
 
-    function sendMessage(){
+    function sendChannelMessage(){
       var $input = $('#chat-input');
       $input.on('keydown', function(e) {
         e.stopImmediatePropagation();
