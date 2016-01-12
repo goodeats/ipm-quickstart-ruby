@@ -63,7 +63,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTI0NjczOTgiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjQ3MDk5OCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.N0MC8-7TqanTKFM1s-Lh3zi0APCHXzjbQ1wKlkhHLfM';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTI1NjEwNjEiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjU2NDY2MSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.Re2tsZYs1GDo1zkTazIeeiTXlH3mnTbSSwmlzJ7eQnI';
 
       $('.info').remove();
       // Alert the user they have been assigned a random username
@@ -160,6 +160,7 @@ $(function() {
           return channelA > channelB ? 1 : -1;
         });
         buildChannelButtons();
+        buildChannelPages();
       }
     }
 
@@ -175,13 +176,22 @@ $(function() {
           }
         }
       }
+    }
+
+    function buildChannelPages(){
+      for (i = 0; i < channelList.length; i++){
+        var channel = channelList[i].channel;
+        if ($('#' + channel.uniqueName + '_messages').length === 0){
+          var newChatWindow = '<div id="' + channel + '_messages" class="messages"></div>';
+          $('#content').prepend(newChatWindow);
+        }
+      }
       joinExistingChannelListener();
     }
 
     function channelMessagesListener(channel){
       channel.on('messageAdded', function(message, channel) {
-        printMessage(message.author, message.dateUpdated, message.body);
-        var messageChannel = $('#join_' + myChannel.uniqueName);
+        var messageChannel = $('#join_' + message.channel.uniqueName);
         moveToFirst(messageChannel);
       });
     }
