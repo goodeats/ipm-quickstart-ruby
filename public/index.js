@@ -3,6 +3,7 @@ $(function() {
   var $chatWindow = $('#init_messages');
   var header = $('.nav-header');
   var windowHeader = $('.nav-channel-title');
+  var navWindow = $('#messages-container');
 
   // Manages the state of our access token we got from the server
   var accessManager;
@@ -68,7 +69,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTI1NjY1NzAiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjU3MDE3MCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.r9AqG_XpoC_OcCFt3X56O7RvQK1Za7McqUTabpiKzU0';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTI2OTM3NzgiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjY5NzM3OCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.W0rdrjXEzr2z1CMczF4rl9wswob0xkBaABr_083oxd8';
 
       $('.info').remove();
       // Alert the user they have been assigned a random username
@@ -85,6 +86,7 @@ $(function() {
       console.log('Initialized');
       invitesListener();
       channelEventsListener();
+      navListener();
       getChannels();
     }
 
@@ -111,6 +113,21 @@ $(function() {
       // A channel's attributes or metadata have changed.
       messagingClient.on('channelUpdated', function(channel) {
         // console.log('Channel updates for ' + channel.friendlyName + ': ' + channel.sid);
+      });
+    }
+
+    function navListener(){
+      var sidebarNavButton = $('.sidebar-nav-button');
+      sidebarNavButton.on('click', function(){
+        var navWindow_id = $(this).attr('id').replace('sidebar-nav-', '') + '-container';
+        newNavWindow = $('#' + navWindow_id);
+        if (navWindow != newNavWindow){
+          navWindow.toggleClass('active');
+          newNavWindow.toggleClass('active');
+          navWindow = newNavWindow;
+        } else {
+          console.log('they are the same!');
+        }
       });
     }
 
@@ -145,14 +162,14 @@ $(function() {
     var channelList = [];
     function getLastChannelMessage(channel){
       channel.getMessages(1).then(function(messages) {
-        var channelStuff = {};
-        channelStuff.channel = channel;
+        var channelWithLastUpdate = {};
+        channelWithLastUpdate.channel = channel;
         if (messages.length > 0){
-          channelStuff.lastUpdate = messages[0].timestamp;
+          channelWithLastUpdate.lastUpdate = messages[0].timestamp;
         } else {
-          channelStuff.lastUpdate = channel.dateCreated;
+          channelWithLastUpdate.lastUpdate = channel.dateCreated;
         }
-        channelList.push(channelStuff);
+        channelList.push(channelWithLastUpdate);
         sortChannelList();
       });
     }
@@ -188,7 +205,7 @@ $(function() {
         var channel = channelList[i].channel;
         if ($('#' + channel.uniqueName + '_messages').length === 0){
           var newChatWindow = '<div id="' + channel + '_messages" class="messages"></div>';
-          $('#content').prepend(newChatWindow);
+          $('#messages-container').prepend(newChatWindow);
         }
       }
       joinExistingChannelListener();
@@ -263,12 +280,33 @@ $(function() {
             myChannel = channel;
             myChannels[uniqueName] = channel;
             newChannel = true;
+            initNewChannel(channel);
             getChannels();
           });
         } else {
           myChannels[uniqueName] = channel;
           joinChannel();
         }
+      });
+    }
+
+    function initNewChannel(channel){
+      appendInvitetoUnassigned(channel)
+    }
+
+    function appendInvitetoUnassigned(channel){
+      var conciergeAlert = '<div id="view-' + channel.uniqueName + '" class="new-channel">"' + channel.friendlyName + '" has been created.</div>';
+      var conciergeMessages = $('#concierge-messages');
+      conciergeMessages.append(conciergeAlert);
+      newChannelListener();
+    }
+
+    function newChannelListener(){
+      var newChannel = $('.new-channel');
+      newChannel.on('click', function(){
+        var uniqueName = $(this).attr('id').replace('view-', '');
+        var channel = myChannels[uniqueName];
+
       });
     }
 
@@ -290,7 +328,7 @@ $(function() {
       var uniqueChannel = $('#' + channel + '_messages');
       if (uniqueChannel.length === 0){
         var newChatWindow = '<div id="' + channel + '_messages" class="messages active"></div>';
-        $('#content').prepend(newChatWindow);
+        $('#messages-container').prepend(newChatWindow);
       } else {
         uniqueChannel.toggleClass('active');
       }

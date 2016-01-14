@@ -57,6 +57,36 @@ html, body {
   min-height: 400px;
 }
 
+#sidebar-nav {
+  height: 50px;
+  width: 100%;
+  background: gold;
+}
+
+.sidebar-nav-button {
+  height: 100%;
+  width: 33.33333333%;
+  display: inline-block;
+  color: black;
+  float: left;
+  text-align: center;
+  line-height: 50px;
+  cursor: pointer;
+}
+
+.sidebar-nav-button:focus,
+.sidebar-nav-button:hover {
+  background: #555;
+}
+
+.content-container {
+  display: none;
+}
+
+.content-container.active {
+  display: inline;
+}
+
 .join {
   height: 40px;
   width: 100%;
@@ -94,7 +124,8 @@ html, body {
   color:#eee;
 }
 
-.messages {
+.messages,
+.other {
   display: none;
   background-color: #999;
   padding: 10px;
@@ -103,7 +134,8 @@ html, body {
   overflow-y:auto;
 }
 
-.messages.active {
+.messages.active,
+.other {
   display: block;
 }
 
