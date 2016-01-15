@@ -16,6 +16,7 @@ $(function() {
   var myChannel;
   var myChannels = {};
   var newChannel = false;
+  var newChannelMessages = [];
 
   // The server will assign the client a random username - store that value
   // here
@@ -70,10 +71,9 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTI4Mjc0MDgiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjgzMTAwOCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.DEMfJmtkBPcYJIcgY5KwhN14Bd30vCDR55qrvkyOGas';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTI4MzUwNzkiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjgzODY3OSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.OvElaZDTmh5ce6DyJBC8EEiRUackfyRY81W9p4sQl9c';
 
       $('.info').remove();
-      // Alert the user they have been assigned a random username
       username = data.identity;
       windowHeader.text('Welcome ' + username + '!');
 
@@ -88,7 +88,30 @@ $(function() {
       invitesListener();
       channelEventsListener();
       navListener();
-      getChannels();
+      prepareInput();
+    }
+
+    var canCreateChannel = true;
+    function prepareInput(){
+      var input = $('#chat-input');
+      input.on('keydown', function(e) {
+        e.stopImmediatePropagation();
+        if (e.keyCode == 13) {
+          if (input.val() == 'login'){
+            input.unbind();
+            getChannels();
+          } else {
+            var uniqueName = 'newchat-' + Date.now().toString();
+            var friendlyName = input.val();
+            newChannelMessages.push(input.val());
+            if (canCreateChannel){
+              canCreateChannel = false;
+              findOrCreateChannel(uniqueName, friendlyName);
+            }
+          }
+          input.val('');
+        }
+      });
     }
 
     function invitesListener(){
@@ -138,23 +161,17 @@ $(function() {
         channelCount = channels.length;
         for (i = 0; i < channelCount; i++){
           var channel = channels[i];
-          joinChannelNow(channel);
+          // TODO: could sort channels here, now aware of how to get them
+          prepareChannelForSidebar(channel);
         }
-        if (firstTime){
-          firstTime = false;
-          createChannelForm();
-          joinExistingChannelListener();
-        } else {
-          joinExistingChannelListener();
-          joinChannel();
-        }
+        joinExistingChannelListener();
       });
     }
 
-    function joinChannelNow(channel){
+    function prepareChannelForSidebar(channel){
       channel.join().then(function(channel) {
         getLastChannelMessage(channel);
-        channelMessagesListener(channel);
+        sidebarChannelMessagesListener(channel);
       });
     }
 
@@ -188,12 +205,11 @@ $(function() {
     function buildChannelButtons(){
       for (i = 0; i < channelList.length; i++){
         var channel = channelList[i].channel;
-        if ($('#join_' + channel.uniqueName).length === 0){
-          var channelButton = '<div id="join_' + channel.uniqueName + '" class="join">' + channel.friendlyName + '</div>';
+        if ($('#join-' + channel.uniqueName).length === 0){
+          var channelButton = '<div id="join-' + channel.uniqueName + '" class="join">' + channel.friendlyName + '</div>';
           $('.channel-container').prepend(channelButton);
           if (newChannel){
-            newChannel = false;
-            $('#join_' + channel.uniqueName).addClass('pending');
+            $('#join-' + channel.uniqueName).addClass('pending');
           }
         }
       }
@@ -210,13 +226,13 @@ $(function() {
       joinExistingChannelListener();
     }
 
-    function channelMessagesListener(channel){
+    function sidebarChannelMessagesListener(channel){
       channel.on('messageAdded', function(message, channel) {
-        var messageChannel = $('#join_' + message.channel.uniqueName);
+        var messageChannel = $('#join-' + message.channel.uniqueName);
         moveToFirst(messageChannel);
         var currentChannel;
         if (typeof(myChannel) != "undefined"){
-          currentChannel = $('#join_' + myChannel.uniqueName);
+          currentChannel = $('#join-' + myChannel.uniqueName);
         } else {
           currentChannel = [];
         }
@@ -226,23 +242,13 @@ $(function() {
       });
     }
 
-    function createChannelForm(){
-      var form = '<p>Create a new channel</p><form class="new-channel" onsubmit="return false"></form>';
-      var uniqueName = '<input class="uniqueName" type="text" placeholder="create unique name"></input>';
-      var friendlyName = '<input class="friendlyName" type="text" placeholder="create friendly name"></input>';
-      var submit = '<input type="submit"></input>';
-      $('#sidebar').append(form);
-      $('.new-channel').append(uniqueName).append(friendlyName).append(submit);
-      joinNewChannel();
-    }
-
     function joinExistingChannelListener(){
       $('.join').on('click', function(e){
         e.stopImmediatePropagation();
         var this_button = $(this);
         this_button.addClass('pending');
         this_button.removeClass('unread-messages');
-        var uniqueName = this_button.attr('id').replace('join_', '');
+        var uniqueName = this_button.attr('id').replace('join-', '');
         var friendlyName = this_button.text();
         var uniqueChannel = $('#' + uniqueName + '-messages');
         if (uniqueChannel.length > 0){
@@ -251,15 +257,6 @@ $(function() {
           findOrCreateChannel(uniqueName, friendlyName);
         }
 
-      });
-    }
-
-    function joinNewChannel(){
-      $('.new-channel').on('submit', function(e){
-        e.preventDefault;
-        var uniqueName = $('.uniqueName').val();
-        var friendlyName = $('.friendlyName').val();
-        findOrCreateChannel(uniqueName, friendlyName);
       });
     }
 
@@ -279,8 +276,10 @@ $(function() {
             myChannel = channel;
             myChannels[uniqueName] = channel;
             newChannel = true;
+            buildChannelButtons();
+            joinExistingChannelListener();
             initNewChannel(channel);
-            getChannels();
+            joinChannel();
           });
         } else {
           myChannels[uniqueName] = channel;
@@ -290,7 +289,7 @@ $(function() {
     }
 
     function initNewChannel(channel){
-      appendInvitetoUnassigned(channel)
+      appendInvitetoUnassigned(channel);
     }
 
     function appendInvitetoUnassigned(channel){
@@ -303,17 +302,17 @@ $(function() {
     function newChannelListener(){
       var newChannelDiv = $('.new-channel');
       newChannelDiv.on('click', function(){
+        // TODO: prevent this from appending the same messages over and over again
         var uniqueName = $(this).attr('id').replace('view-', '');
         var channel = myChannels[uniqueName];
         channel.getMessages().then(function(messages) {
           var viewInboxMessages = $('#view-inbox-message');
           for (i=0; i<messages.length; i++) {
             var message = messages[i];
-            // debugger
             printMessage(message.author, message.dateUpdated, message.body, viewInboxMessages);
           }
           $('#inbox-container .other').toggleClass('active');
-          // messagesListener(myChannel);
+          messagesListener(channel, viewInboxMessages);
           closeMessage();
         });
       });
@@ -334,12 +333,18 @@ $(function() {
         showAsActiveChannel(channel.uniqueName);
         print('Joined ' + channel.friendlyName + ' as <span class="me">' + username + '</span>.', true);
         initChannelOptions();
+        if (newChannel){
+          for (i = 0; i < newChannelMessages.length; i++) {
+            var message = newChannelMessages[i];
+            myChannel.sendMessage(message);
+          }
+        }
       });
     }
 
     function showAsActiveChannel(channel){
       myChannel = myChannels[channel];
-      var activate_button = $('#join_' + channel);
+      var activate_button = $('#join-' + channel);
       $('.join.active').toggleClass('active');
       activate_button.toggleClass('pending active');
       $chatWindow.toggleClass('active');
@@ -352,7 +357,7 @@ $(function() {
         uniqueChannel.toggleClass('active');
       }
       windowHeader.text(channel.friendlyName);
-      $chatWindow = $('.messages.active');
+      $chatWindow = $('#messages-container .messages.active');
       $chatWindow.scrollTop($chatWindow[0].scrollHeight);
     }
 
@@ -379,9 +384,13 @@ $(function() {
       });
     }
 
-    function messagesListener(channel){
+    function messagesListener(channel, target){
       channel.on('messageAdded', function(message, channel) {
-        var messageChannel = $('#' + message.channel.uniqueName + '-messages');
+        if (target){
+          var messageChannel = target;
+        } else {
+          var messageChannel = $('#' + message.channel.uniqueName + '-messages');
+        }
         printMessage(message.author, message.dateUpdated, message.body, messageChannel);
       });
     }
@@ -402,6 +411,7 @@ $(function() {
 
     function sendChannelMessage(){
       var $input = $('#chat-input');
+      $input.unbind();
       $input.on('keydown', function(e) {
         e.stopImmediatePropagation();
         if (e.keyCode == 13) {
@@ -416,11 +426,12 @@ $(function() {
       invite_button.show();
       invite_button.on('click', function(e){
         e.preventDefault();
-        // TODO: add input for username so not hard-coded as 'rick'
         // Invite another member to your channel
-        myChannel.invite('rick').then(function(member) {
+        var $input = $('#chat-input');
+        myChannel.invite($input.val()).then(function(member) {
           console.log('Your friend "' + member.identity + '" has been invited!');
         });
+        $input.val('');
       });
     }
 
@@ -444,7 +455,7 @@ $(function() {
         e.preventDefault();
         // Delete a previously created Channel
         myChannel.delete().then(function(channel) {
-          console.log("Deleted channel: " + channel.sid);
+          console.log("Deleted channel: " + channel.friendlyName);
         });
       });
     }
