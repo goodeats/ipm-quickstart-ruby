@@ -170,6 +170,7 @@ $(function() {
 
     function prepareChannelForSidebar(channel){
       channel.join().then(function(channel) {
+        $('#sidebar-nav').addClass('active');
         getLastChannelMessage(channel);
         sidebarChannelMessagesListener(channel);
       });
@@ -219,7 +220,7 @@ $(function() {
       for (i = 0; i < channelList.length; i++){
         var channel = channelList[i].channel;
         if ($('#' + channel.uniqueName + '-messages').length === 0){
-          var newChatWindow = '<div id="' + channel + '-messages" class="messages"></div>';
+          var newChatWindow = '<div id="' + channel.uniqueName + '-messages" class="messages"></div>';
           $('#messages-container').prepend(newChatWindow);
         }
       }
@@ -256,7 +257,6 @@ $(function() {
         } else {
           findOrCreateChannel(uniqueName, friendlyName);
         }
-
       });
     }
 

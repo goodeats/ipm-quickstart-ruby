@@ -77,9 +77,14 @@ html, body {
 }
 
 #sidebar-nav {
+  display: none;
   height: 50px;
   width: 100%;
   background: gold;
+}
+
+#sidebar-nav.active {
+  display: block;
 }
 
 .sidebar-nav-button {
