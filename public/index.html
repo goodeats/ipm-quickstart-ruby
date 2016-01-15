@@ -7,47 +7,52 @@
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
-  <header class="nav-header">
-    <span class="nav-app-title">OpenCity</span>
-    <span class="nav-channel-title"></span>
-    <button type="button" class="login">login</button>
-  </header>
-
-  <div id="page-wrapper">
-    <div id="sidebar">
-      <div id="sidebar-nav">
-        <div id="sidebar-nav-messages" class="sidebar-nav-button">Chat</div>
-        <div id="sidebar-nav-inbox" class="sidebar-nav-button">Assign</div>
-        <div id="sidebar-nav-team" class="sidebar-nav-button">Team</div>
+  <button type="button" class="login">login</button>
+  <div id="wrapper">
+    <header class="nav-header">
+      <span class="nav-app-title">OpenCity</span>
+      <span class="nav-channel-title"></span>
+    </header>
+    <div id="page-wrapper">
+      <div id="sidebar">
+        <div id="sidebar-nav">
+          <div id="sidebar-nav-messages" class="sidebar-nav-button">Chat</div>
+          <div id="sidebar-nav-inbox" class="sidebar-nav-button">Assign</div>
+          <div id="sidebar-nav-team" class="sidebar-nav-button">Team</div>
+        </div>
+        <div class="channel-container"></div>
       </div>
-      <div class="channel-container"></div>
-    </div>
-    <div id="content-wrapper">
-      <div id="content">
-        <div id="messages-container" class="content-container active">
-          <div id="init_messages" class="messages active">
-            <p style="float:right;">messages go here</p>
+      <div id="content-wrapper">
+        <div id="content">
+          <div id="messages-container" class="content-container active">
+            <div id="init-messages" class="messages active">
+              <p style="float:right;">messages go here</p>
+            </div>
           </div>
-        </div>
-        <div id="inbox-container" class="content-container">
-          <div id="concierge-messages" class="other">
-            <p style="float:right;">concierge messages go here</p>
+          <div id="inbox-container" class="content-container">
+            <div id="inbox-messages" class="other active">
+              <p style="float:right;">concierge messages go here</p>
+            </div>
+            <div id="view-inbox-message" class="messages other">
+              <span class="close">close</span>
+            </div>
           </div>
-        </div>
-        <div id="team-container" class="content-container">
-          <div id="team_messages" class="other">
-            <p style="float:right;">team messages go here</p>
+          <div id="team-container" class="content-container">
+            <div id="team-messages" class="other active">
+              <p style="float:right;">team messages go here</p>
+            </div>
           </div>
-        </div>
-        <input id="chat-input" type="text" placeholder="say anything" autofocus/>
-        <div class="channel-buttons">
-          <button type="button" class="invite" style="display: none;">Invite</button>
-          <button type="button" class="leave" style="display: none;">Leave</button>
-          <button type="button" class="delete" style="display: none;">Delete</button>
+          <input id="chat-input" type="text" placeholder="say anything" autofocus/>
+          <div class="channel-buttons">
+            <button type="button" class="invite" style="display: none;">Invite</button>
+            <button type="button" class="leave" style="display: none;">Leave</button>
+            <button type="button" class="delete" style="display: none;">Delete</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
+
 
   <script src="//media.twiliocdn.com/sdk/rtc/js/ip-messaging/v0.9/twilio-ip-messaging.min.js"></script>
   <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>

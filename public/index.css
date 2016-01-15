@@ -10,6 +10,25 @@ html, body {
   font-family: 'Helvetica Neue', Helvetica, sans-serif;
 }
 
+#wrapper {
+  display: none;
+}
+
+#wrapper.active {
+  display: block;
+}
+
+.login {
+  height: 100px;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  background: purple;
+  color: #fff;
+  border: none;
+  font-size: 24px;
+}
+
 .nav-header {
   width:100%;
   height: 100px;
@@ -84,7 +103,9 @@ html, body {
 }
 
 .content-container.active {
-  display: inline;
+  display: inline-block;
+  height: 80%;
+  width: 100%;
 }
 
 .join {
@@ -116,12 +137,12 @@ html, body {
   height:52px;
   margin:10px auto;
   outline:none;
-  background-color:transparent;
+  background-color:#fff;
   border:none;
-  border-bottom:1px solid #2B2B2A;
+  /*border-bottom:1px solid #2B2B2A;*/
   padding:0;
   font-size:42px;
-  color:#eee;
+  color:#000;
 }
 
 .messages,
@@ -129,13 +150,13 @@ html, body {
   display: none;
   background-color: #999;
   padding: 10px;
-  height: 80%;
+  height: 100%;
   margin:0 auto;
   overflow-y:auto;
 }
 
 .messages.active,
-.other {
+.other.active {
   display: block;
 }
 
