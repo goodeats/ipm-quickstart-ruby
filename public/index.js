@@ -71,7 +71,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTI4MzUwNzkiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MjgzODY3OSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.OvElaZDTmh5ce6DyJBC8EEiRUackfyRY81W9p4sQl9c';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTI4NDIwNTkiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1Mjg0NTY1OSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.FBD50x7XpE1AQ-mmAUocC8pU6njze__3v5BuU8wk3sg';
 
       $('.info').remove();
       username = data.identity;
@@ -129,6 +129,8 @@ $(function() {
       // A channel has become visible to the Client
       messagingClient.on('channelAdded', function(channel) {
         print('Channel added: ' + channel.friendlyName, true);
+        myChannels[channel.uniqueName] = channel;
+        initNewChannel(channel);
       });
       // A channel is no longer visible to the Client
       messagingClient.on('channelRemoved', function(channel) {
@@ -162,6 +164,7 @@ $(function() {
         channelCount = channels.length;
         for (i = 0; i < channelCount; i++){
           var channel = channels[i];
+          myChannels[channel.uniqueName] = channel;
           // TODO: could sort channels here, now aware of how to get them
           prepareChannelForSidebar(channel);
         }
@@ -254,11 +257,7 @@ $(function() {
         var uniqueName = this_button.attr('id').replace('join-', '');
         var friendlyName = this_button.text();
         var uniqueChannel = $('#' + uniqueName + '-messages');
-        if (uniqueChannel.length > 0){
-          showAsActiveChannel(uniqueName);
-        } else {
-          findOrCreateChannel(uniqueName, friendlyName);
-        }
+        findOrCreateChannel(uniqueName, friendlyName);
       });
     }
 
@@ -278,12 +277,12 @@ $(function() {
             myChannel = channel;
             myChannels[uniqueName] = channel;
             newChannel = true;
-            buildChannelButtons();
+            buildChannelButtons(); // TODO: should this be here?
             joinExistingChannelListener();
-            initNewChannel(channel);
             joinChannel();
           });
         } else {
+          console.log('this channel exists');
           myChannels[uniqueName] = channel;
           joinChannel();
         }
@@ -302,21 +301,36 @@ $(function() {
     }
 
     function newChannelListener(){
+
       var newChannelDiv = $('.new-channel');
       newChannelDiv.on('click', function(){
         // TODO: prevent this from appending the same messages over and over again
         var uniqueName = $(this).attr('id').replace('view-', '');
         var channel = myChannels[uniqueName];
-        channel.getMessages().then(function(messages) {
-          var viewInboxMessages = $('#view-inbox-message');
-          for (i=0; i<messages.length; i++) {
-            var message = messages[i];
-            printMessage(message.author, message.dateUpdated, message.body, viewInboxMessages);
-          }
-          $('#inbox-container .other').toggleClass('active');
-          messagesListener(channel, viewInboxMessages);
-          closeMessage();
-        });
+
+        // this is that issue where it won't let you see the messages unless you're joined
+        // channel.getMessages().then(function(messages) {
+        //   var viewInboxMessages = $('#view-inbox-message');
+        //   for (i=0; i<messages.length; i++) {
+        //     var message = messages[i];
+        //     printMessage(message.author, message.dateUpdated, message.body, viewInboxMessages);
+        //   }
+        //   $('#inbox-container .other').toggleClass('active');
+        //   messagesListener(channel, viewInboxMessages);
+        //   prepareInputToJoin(); // create once you can see the message again
+        //   closeMessage();
+        // });
+        myChannel = channel;
+        $('.channel-container').prepend('<div id="' + channel.uniqueName + '" class="join">' + channel.friendlyName + '</div>');
+        joinChannel();
+
+        var newChatWindow = '<div id="' + channel.uniqueName + '-messages" class="messages"></div>';
+        $('#messages-container').prepend(newChatWindow);
+        joinExistingChannelListener();
+        var newNavWindow = $('#messages-container');
+        navWindow.toggleClass('active');
+        newNavWindow.toggleClass('active');
+        navWindow = newNavWindow;
       });
     }
 
@@ -358,7 +372,7 @@ $(function() {
       } else {
         uniqueChannel.toggleClass('active');
       }
-      windowHeader.text(channel.friendlyName);
+      windowHeader.text(myChannel.friendlyName);
       $chatWindow = $('#messages-container .messages.active');
       $chatWindow.scrollTop($chatWindow[0].scrollHeight);
     }
