@@ -158,6 +158,7 @@ $(function() {
     function getChannels(){
       // Get Messages for a previously created channel
       messagingClient.getChannels().then(function(channels) {
+        $('#sidebar').append('<p>Loading...</p>');
         channelCount = channels.length;
         for (i = 0; i < channelCount; i++){
           var channel = channels[i];
@@ -198,6 +199,7 @@ $(function() {
           var channelB = b.lastUpdate;
           return channelA > channelB ? 1 : -1;
         });
+        $('#sidebar p').remove();
         buildChannelButtons();
         buildChannelPages();
       }
