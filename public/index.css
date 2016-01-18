@@ -134,6 +134,7 @@ html, body {
   color: #000;
   text-align: center;
   line-height: 40px;
+  cursor: pointer;
 }
 
 .join.pending {
