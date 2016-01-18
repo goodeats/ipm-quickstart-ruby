@@ -21,6 +21,7 @@ $(function() {
   var myChannels = {}; // stores all channels by uniqueName as key
   var newChannel = false;
   var newChannelMessages = [];
+  var conciergeLogin = false;
 
   // The server will assign the client a random username - store that value
   // here
@@ -101,6 +102,7 @@ $(function() {
         e.stopImmediatePropagation();
         if (e.keyCode == 13) {
           if (input.val() == 'login'){
+            conciergeLogin = true;
             input.unbind();
             getChannels();
           } else {
@@ -120,8 +122,10 @@ $(function() {
     function channelEventsListener(){
       // A channel has become visible to the Client
       messagingClient.on('channelAdded', function(channel) {
-        myChannels[channel.uniqueName] = channel;
-        initNewChannel(channel);
+        if (conciergeLogin){
+          myChannels[channel.uniqueName] = channel;
+          initNewChannel(channel);
+        }
       });
       // A channel is no longer visible to the Client
       messagingClient.on('channelRemoved', function(channel) {
@@ -134,7 +138,6 @@ $(function() {
     }
 
     function navListener(){
-      // TODO: $chatWindow changes with nav switch
       var sidebarNavButton = $('.sidebar-nav-button');
       sidebarNavButton.on('click', function(e){
         if (!$(this).hasClass('active')){
@@ -146,7 +149,6 @@ $(function() {
           var activeWindowId = $(this).attr('id').replace('sidebar-nav-', '');
           newactiveWindow = $('#' + activeWindowId + '-container');
           newSidebar = $('#' + activeWindowId + '-sidebar');
-          // debugger
 
           activeWindow.toggleClass('active');
           newactiveWindow.toggleClass('active');
@@ -157,7 +159,6 @@ $(function() {
 
           $chatWindow = activeWindow.find('.messages.active'); // sets new chatWindow
           storeActiveWindowChannel($chatWindow);
-          console.log($chatWindow);
         }
       });
     }
@@ -221,17 +222,13 @@ $(function() {
     }
 
     function buildChannelButton(channel, sidebar){
-      if ($('#join-' + channel.uniqueName).length === 0){
-        var channelButton = '<div id="join-' + channel.uniqueName + '" class="join">' + channel.friendlyName + '</div>';
-        sidebar.prepend(channelButton);
-      }
+      var channelButton = '<div id="join-' + channel.uniqueName + '" class="join">' + channel.friendlyName + '</div>';
+      sidebar.prepend(channelButton);
     }
 
     function buildChannelPage(channel, messageBoard){
-      if ($('#' + channel.uniqueName + '-messages').length === 0){
-        var newChatWindow = '<div id="' + channel.uniqueName + '-messages" class="messages"></div>';
-        messageBoard.prepend(newChatWindow);
-      }
+      var newChatWindow = '<div id="' + channel.uniqueName + '-messages" class="messages"></div>';
+      messageBoard.prepend(newChatWindow);
     }
 
     function sidebarChannelMessagesListener(channel){
@@ -286,7 +283,8 @@ $(function() {
             myChannel = channel;
             myChannels[uniqueName] = channel;
             newChannel = true;
-            buildChannelButton(channel, $('#messages-sidebar')); // TODO: should this be here?
+            buildChannelButton(channel, $('#messages-sidebar'));
+            buildChannelPage(channel, $('#messages-container'));
             $('#join-' + channel.uniqueName).addClass('pending');
             joinExistingChannelListener();
             joinChannel();
@@ -309,7 +307,6 @@ $(function() {
 
     function joinChannel() {
       myChannel.join().then(function(channel) {
-        // showAsActiveChannel(channel.uniqueName);
         print('Joined ' + channel.friendlyName + ' as <span class="me">' + username + '</span>.', true);
         initChannelOptions();
       });
