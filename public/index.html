@@ -16,13 +16,13 @@
     <div id="page-wrapper">
       <div id="sidebar">
         <div id="sidebar-nav">
-          <div id="sidebar-nav-messages" class="sidebar-nav-button">Chat</div>
+          <div id="sidebar-nav-messages" class="sidebar-nav-button active">Chat</div>
           <div id="sidebar-nav-inbox" class="sidebar-nav-button">Unread</div>
           <div id="sidebar-nav-team" class="sidebar-nav-button">Team</div>
         </div>
-        <div id="my-channels-sidebar" class="channel-container"></div>
-        <div id="unassigned-channels-sidebar" class="channel-container"></div>
-        <div id="team-channels-sidebar" class="channel-container"></div>
+        <div id="messages-sidebar" class="channel-container active"></div>
+        <div id="inbox-sidebar" class="channel-container">unread messages</div>
+        <div id="team-sidebar" class="channel-container">team messages</div>
       </div>
       <div id="content-wrapper">
         <div id="content">
@@ -32,15 +32,15 @@
             </div>
           </div>
           <div id="inbox-container" class="content-container">
-            <div id="inbox-messages" class="other active">
+            <div id="inbox-messages" class="messages active">
               <p style="float:right;">concierge messages go here</p>
             </div>
-            <div id="view-inbox-message" class="messages other">
+            <div id="view-inbox-message" class="messages">
               <span class="close">close</span>
             </div>
           </div>
           <div id="team-container" class="content-container">
-            <div id="team-messages" class="other active">
+            <div id="team-messages" class="messages active">
               <p style="float:right;">team messages go here</p>
             </div>
           </div>

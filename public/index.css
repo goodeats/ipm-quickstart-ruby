@@ -103,6 +103,18 @@ html, body {
   background: #555;
 }
 
+.sidebar-nav-button.active {
+  background: blue;
+}
+
+.channel-container {
+  display: none;
+}
+
+.channel-container.active {
+  display: block;
+}
+
 .content-container {
   display: none;
 }
