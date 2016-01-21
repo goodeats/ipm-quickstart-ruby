@@ -76,7 +76,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTMzNTA0MTYiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzM1NDAxNiwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.DGZOUVoJt3bzLNvSu2jtGJuJrPVJnOVrUp2Qo9elZAo';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTMzNTM4MTMiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzM1NzQxMywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.-NDwesOp6_rW33hWCI3l7NmuVRUIGq0kq_P_BUNzGVE';
 
       $('.info').remove();
       username = data.identity;
@@ -327,14 +327,27 @@ $(function() {
     function initNewChannel(channel){
       buildChannelButton(channel, $('#inbox-sidebar'));
       buildChannelPage(channel, $('#inbox-container'));
-      channel.getMessages().then(function(messages){
-        for (var i = 0; i < messages.length; i++) {
-          var message = messages[i];
-          console.log(message.body);
-          debugger
-        }
+      // TODO: wait for message to be added from user
+      waitForNewChannelMessage(channel); // belsito
+      // getAllChannelMessages(channel, $('#' + channel.uniqueName));
+    }
+
+    function waitForNewChannelMessage(channel){
+      debugger
+      // got the channel, added the button and page
+      // this may have been asking for channel messages before the users array pushed them in
+      // channel listener could push
+      channel.on('messageAdded', function(message){
+        console.log(message.body);
+        debugger
       });
-      // joinExistingChannelListener();
+    }
+
+    function getAllChannelMessages(channel){
+      debugger
+      channel.getMessages(99999).then(function(messages) {
+        debugger
+      });
     }
 
     function joinChannel() {
