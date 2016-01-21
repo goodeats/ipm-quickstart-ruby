@@ -20,13 +20,11 @@ html, body {
 
 .login {
   height: 100px;
-  width: 100px;
+  width: 100%;
   position: fixed;
   bottom: 0;
-  right: 0;
   background: purple;
   border: none;
-  border-radius: 50px;
   font-size: 24px;
   color: #fff;
 }
@@ -218,11 +216,12 @@ html, body {
   margin-right:5px;
 }
 
-@media screen and (max-width: 400px){
+@media screen and (min-width: 400px){
   .login {
     height: 100px;
-    width: 100%;
-    bottom: 0;
-    font-size: 24px;
+    width: 100px;
+    bottom: 20px;
+    right: 20px;
+    border-radius: 50px;
   }
 }
