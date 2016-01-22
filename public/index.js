@@ -76,7 +76,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTMzNTM4MTMiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzM1NzQxMywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.-NDwesOp6_rW33hWCI3l7NmuVRUIGq0kq_P_BUNzGVE';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM0MzU4MjYiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzQzOTQyNiwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.UifpYbPj-HToJJOR_OadC4_qIZov7RgCWIv8oJrd0ag';
 
       $('.info').remove();
       username = data.identity;
@@ -164,40 +164,60 @@ $(function() {
     }
 
     var totalChannels;
-    var channelCount = 0;
     var myChannelsCount = 0;
+    var allChannels;
+
     function getAllChannels(){
       messagingClient.getChannels().then(function(channels) {
         $('#sidebar-nav').addClass('active');
         $('#messages-sidebar').append('<p class="loading">Loading...</p>');
         totalChannels = channels.length;
-        for (i = 0; i < channels.length; i++){
-          var channel = channels[i];
-          getMyChannel(channel);
-        }
+        allChannels = channels;
+        nextChannel(channels);
       });
     }
 
-    function getMyChannel(channel){
+    var index = 0;
+    function nextChannel(){
+      if (index < allChannels.length){
+        var channel = allChannels[index];
+        checkIfJoinedChannel(channel);
+      }
+    }
+
+    function checkIfJoinedChannel(channel){
       var ch = channel;
-      channel.getMembers().then(function(members){
-        // TODO: push unassigned from here
-        channelCount++;
-        for (var i = 0; i < members.length; i++) {
-          member = members[i];
-          if (member.identity === username){ // TODO: find better method of getting the current user
-            console.log('~~~~~~~~~I\'m a member of: ' + ch.friendlyName);
-            myChannels[ch.uniqueName] = ch;
-            myChannelsCount++;
-            console.log('channelCount: ' + channelCount);
-            console.log('totalChannels: ' + totalChannels);
-            console.log('myChannelsCount: ' + myChannelsCount);
-            if (channelCount === totalChannels){ // gone through all channels
-              initMyChannels();
+      index++;
+      if (ch.members.size > 1){
+        channel.getMembers().then(function(members){
+          for (var i = members.length - 1; i >= 0; i--) {
+            member = members[i];
+            if (member.identity === username){ // TODO: find better method of getting the current user than by name
+              myChannels[ch.uniqueName] = ch;
+              myChannelsCount++;
+              // console.log('index: ' + index);
+              // console.log('totalChannels: ' + totalChannels);
+              // console.log('myChannelsCount: ' + myChannelsCount);
+              initOrPrep();
             }
           }
-        }
-      });
+        });
+      } else {
+        // TODO: push to unassigned from here
+        // console.log('index: ' + index);
+        // console.log('totalChannels: ' + totalChannels);
+        // console.log('myChannelsCount: ' + myChannelsCount);
+        initOrPrep();
+      }
+    }
+
+    function initOrPrep(){
+      if (index === totalChannels){ // gone through all channels
+        console.log('gonna init');
+        initMyChannels();
+      } else {
+        nextChannel();
+      }
     }
 
     function initMyChannels(){
@@ -241,8 +261,8 @@ $(function() {
         }
         joinExistingChannelListener();
       } else {
-        console.log('myChannels length: ' + myChannelsCount);
-        console.log('channelsToSortByLastUpdate length: ' + channelsToSortByLastUpdate.length);
+        // console.log('myChannels length: ' + myChannelsCount);
+        // console.log('channelsToSortByLastUpdate length: ' + channelsToSortByLastUpdate.length);
       }
     }
 
@@ -328,7 +348,7 @@ $(function() {
       buildChannelButton(channel, $('#inbox-sidebar'));
       buildChannelPage(channel, $('#inbox-container'));
       // TODO: wait for message to be added from user
-      waitForNewChannelMessage(channel); // belsito
+      waitForNewChannelMessage(channel);
       // getAllChannelMessages(channel, $('#' + channel.uniqueName));
     }
 
