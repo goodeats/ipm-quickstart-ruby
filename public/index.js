@@ -19,6 +19,8 @@ $(function() {
   // will have in this sample app
   var myChannel; // current channel
   var myChannels = {}; // stores all channels by uniqueName as key
+  var storedButtons = {}; // stores all buttons by uniqueName as key
+  var storedMessageBoards = {}; // stores all message boards by uniqueName as key
   var newChannel = false;
   var newChannelMessages = [];
   var conciergeLogin = false;
@@ -31,14 +33,20 @@ $(function() {
   });
 
   // Helper function to print info messages to the chat window
-  function print(infoMessage, asHtml) {
+  function print(infoMessage, asHtml, target) {
     var $msg = $('<div class="info">');
     if (asHtml) {
       $msg.html(infoMessage);
     } else {
       $msg.text(infoMessage);
     }
-    $chatWindow.append($msg);
+    if (target){
+      target.append($msg);
+      target.scrollTop(target[0].scrollHeight);
+    } else {
+      $chatWindow.append($msg);
+      $chatWindow.scrollTop($chatWindow[0].scrollHeight);
+    }
   }
 
   // Helper function to print chat message to the chat window
@@ -76,7 +84,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM0MzU4MjYiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzQzOTQyNiwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.UifpYbPj-HToJJOR_OadC4_qIZov7RgCWIv8oJrd0ag';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM1NzExODIiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzU3NDc4MiwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.kK19rRdTrabGEEi2X43YdR3jkB_-2v-8oum4zmbqpmI';
 
       $('.info').remove();
       username = data.identity;
@@ -90,8 +98,6 @@ $(function() {
 
     function init(){
       console.log('Initialized');
-      channelEventsListener();
-      navListener();
       prepareInput();
     }
 
@@ -104,6 +110,7 @@ $(function() {
           if (input.val() == 'login'){
             conciergeLogin = true;
             input.unbind();
+            navListener();
             getAllChannels();
           } else {
             var uniqueName = 'newchat-' + Date.now().toString();
@@ -175,6 +182,7 @@ $(function() {
         allChannels = channels;
         nextChannel(channels);
       });
+      channelEventsListener();
     }
 
     var index = 0;
@@ -198,7 +206,7 @@ $(function() {
               // console.log('index: ' + index);
               // console.log('totalChannels: ' + totalChannels);
               // console.log('myChannelsCount: ' + myChannelsCount);
-              initOrPrep();
+              initOrNext();
             }
           }
         });
@@ -207,11 +215,11 @@ $(function() {
         // console.log('index: ' + index);
         // console.log('totalChannels: ' + totalChannels);
         // console.log('myChannelsCount: ' + myChannelsCount);
-        initOrPrep();
+        initOrNext();
       }
     }
 
-    function initOrPrep(){
+    function initOrNext(){
       if (index === totalChannels){ // gone through all channels
         console.log('gonna init');
         initMyChannels();
@@ -269,11 +277,13 @@ $(function() {
     function buildChannelButton(channel, sidebar){
       var channelButton = '<div id="join-' + channel.uniqueName + '" class="join">' + channel.friendlyName + '</div>';
       sidebar.prepend(channelButton);
+      storedButtons[channel.uniqueName] = $('#join-' + channel.uniqueName);
     }
 
     function buildChannelPage(channel, messageBoard){
       var newChatWindow = '<div id="' + channel.uniqueName + '-messages" class="messages"></div>';
       messageBoard.prepend(newChatWindow);
+      storedMessageBoards[channel.uniqueName] = $('#' + channel.uniqueName + '-messages');
     }
 
     function sidebarChannelMessagesListener(channel){
@@ -324,21 +334,21 @@ $(function() {
             friendlyName: friendlyName
           }).then(function(channel) {
             windowHeader.text(channel.friendlyName);
-            print('Created "' + channel.friendlyName + '" channel', true);
             myChannel = channel;
             myChannels[uniqueName] = channel;
             newChannel = true;
             buildChannelButton(channel, $('#messages-sidebar'));
             buildChannelPage(channel, $('#messages-container'));
-            $('#join-' + channel.uniqueName).addClass('pending');
+            print('Created "' + channel.friendlyName + '" channel', true, storedMessageBoards[channel.uniqueName]);
+            storedButtons[channel.uniqueName].addClass('pending');
             joinExistingChannelListener();
-            joinChannel();
+            joinChannel(channel);
             showAsActiveChannel(channel.uniqueName);
           });
         } else {
           console.log('this channel exists');
           myChannels[uniqueName] = channel;
-          joinChannel();
+          joinChannel(channel);
           showAsActiveChannel(channel.uniqueName);
         }
       });
@@ -349,31 +359,20 @@ $(function() {
       buildChannelPage(channel, $('#inbox-container'));
       // TODO: wait for message to be added from user
       waitForNewChannelMessage(channel);
-      // getAllChannelMessages(channel, $('#' + channel.uniqueName));
     }
 
     function waitForNewChannelMessage(channel){
-      debugger
+      joinChannel(channel);
       // got the channel, added the button and page
       // this may have been asking for channel messages before the users array pushed them in
       // channel listener could push
-      channel.on('messageAdded', function(message){
-        console.log(message.body);
-        debugger
-      });
+      // channel.leave(); // leave after getting messages
     }
 
-    function getAllChannelMessages(channel){
-      debugger
-      channel.getMessages(99999).then(function(messages) {
-        debugger
-      });
-    }
-
-    function joinChannel() {
-      myChannel.join().then(function(channel) {
-        print('Joined ' + channel.friendlyName + ' as <span class="me">' + username + '</span>.', true);
-        initChannelOptions();
+    function joinChannel(ch) {
+      ch.join().then(function(channel) {
+        print('Joined ' + channel.friendlyName + ' as <span class="me">' + username + '</span>.', true, storedMessageBoards[channel.uniqueName]);
+        initChannelOptions(ch);
       });
     }
 
@@ -386,7 +385,7 @@ $(function() {
 
       // toggle window
       $chatWindow.toggleClass('active');
-      var uniqueChannel = $('#' + channel + '-messages');
+      var uniqueChannel = storedMessageBoards[myChannel.uniqueName];
       uniqueChannel.toggleClass('active');
 
       // toggle header
@@ -403,44 +402,42 @@ $(function() {
       chatWindows[activeWindowId] = $chatWindow;
     }
 
-    function initChannelOptions(){
-      console.log('init \'' + myChannel.friendlyName + '\' channel options');
-      sendStoredMessages();
-      getChannelMessages();
-      sendChannelMessage();
-      inviteToChannel();
-      leaveChannel();
-      deleteChannel();
-      memberEventsListener();
+    function initChannelOptions(channel){
+      console.log('init \'' + channel.friendlyName + '\' channel options');
+      sendStoredMessages(channel);
+      getChannelMessages(channel);
+      messagesListener(channel);
+      sendChannelMessage(channel);
+      leaveChannel(channel);
+      deleteChannel(channel);
+      memberEventsListener(channel);
     }
 
-    function sendStoredMessages(){
+    function sendStoredMessages(channel){
       if (newChannel){
         for (i = 0; i < newChannelMessages.length; i++) {
           var message = newChannelMessages[i];
-          myChannel.sendMessage(message);
+          channel.sendMessage(message);
           // TODO: show face
         }
       }
     }
 
-    function getChannelMessages(){
-      myChannel.getMessages().then(function(messages) {
+    function getChannelMessages(channel){
+      channel.getMessages().then(function(messages) {
         var totalMessages = messages.length;
-        print('Total Messages: ' + totalMessages, true);
+        print('Total Messages: ' + totalMessages, true, storedMessageBoards[channel.uniqueName]);
         for (i=0; i<messages.length; i++) {
           var message = messages[i];
-          printMessage(message.author, message.dateUpdated, message.body);
+          printMessage(message.author, message.dateUpdated, message.body, storedMessageBoards[channel.uniqueName]);
           // TODO: set message index
         }
-        messagesListener(myChannel);
       });
     }
 
-    function messagesListener(channel, target){
-      channel.on('messageAdded', function(message, channel) {
-        var messageChannel = $('#' + message.channel.uniqueName + '-messages');
-        printMessage(message.author, message.dateUpdated, message.body, messageChannel);
+    function messagesListener(channel){
+      channel.on('messageAdded', function(message) {
+        printMessage(message.author, message.dateUpdated, message.body, storedMessageBoards[channel.uniqueName]);
       });
     }
 
@@ -448,75 +445,61 @@ $(function() {
       item.parent().prepend(item);
     }
 
-    function sendChannelMessage(){
+    function sendChannelMessage(channel){
       var $input = $('#chat-input');
       $input.unbind();
       $input.on('keydown', function(e) {
         e.stopImmediatePropagation();
         if (e.keyCode == 13) {
-          myChannel.sendMessage($input.val());
+          channel.sendMessage($input.val());
           $input.val('');
           // TODO: show face
         }
       });
     }
 
-    function inviteToChannel(){
-      var invite_button = $('.invite');
-      invite_button.show();
-      invite_button.on('click', function(e){
-        e.preventDefault();
-        // Invite another member to your channel
-        var $input = $('#chat-input');
-        myChannel.invite($input.val()).then(function(member) {
-          console.log('Your friend "' + member.identity + '" has been invited!');
-        });
-        $input.val('');
-      });
-    }
-
-    function leaveChannel(){
+    function leaveChannel(channel){
       var leave_button = $('.leave');
       leave_button.show();
       leave_button.on('click', function(e){
         e.preventDefault();
         console.log('I want to leave');
-        myChannel.leave();
+        channel.leave();
       });
     }
 
-    function deleteChannel(){
+    function deleteChannel(channel){
       var delete_button = $('.delete');
       delete_button.show();
       delete_button.on('click', function(e){
         e.preventDefault();
         // Delete a previously created Channel
-        myChannel.delete().then(function(channel) {
+        channel.delete().then(function(channel) {
           console.log("Deleted channel: " + channel.friendlyName);
         });
       });
     }
 
-    function memberEventsListener(){
+    function memberEventsListener(channel){
       // Listen for members joining a channel
-      myChannel.on('memberJoined', function(member, messages) {
+      channel.on('memberJoined', function(member, messages) {
         print(member.identity + ' has joined the channel.', true);
         for (i=0; i<messages.length; i++) {
           var message = messages[i];
           console.log('Author:' + message.author);
-          printMessage(member.identity + 'has joined the channel.', member.lastConsumptionTimestamp, message.body);
+          printMessage(member.identity + 'has joined the channel.', member.lastConsumptionTimestamp, message.body, storedMessageBoards[channel.uniqueName]);
         }
       });
       // Listen for members joining a channel
-      myChannel.on('memberLeft', function(member) {
+      channel.on('memberLeft', function(member) {
         print(member.identity + ' has left the channel.', true);
       });
       // Listen for members typing
-      myChannel.on('typingStarted', function(member) {
+      channel.on('typingStarted', function(member) {
         print(member.identity + ' is currently typing.', true);
       });
       // Listen for members typing
-      myChannel.on('typingEnded', function(member) {
+      channel.on('typingEnded', function(member) {
         print(member.identity + ' has stopped typing.', true);
       });
     }
