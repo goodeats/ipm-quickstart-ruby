@@ -389,16 +389,24 @@ $(function() {
 
     function sidebarChannelMessagesListener(channel){
       channel.on('messageAdded', function(message) {
-        var messageChannel = storedButtons[message.channel.uniqueName];
-        moveToFirst(messageChannel);
+        var channelMessageButton = storedButtons[message.channel.uniqueName];
+        var channelMessageBoard = storedMessageBoards[message.channel.uniqueName];
+        if (channelMessageBoard.parent()[0] == $('#inbox-container')[0] && message.author == username){
+          moveToMessages(channel);
+          // TODO: show inbox init channel
+          // TODO: switch nav back to messages
+          // TODO: show this channel as active
+        } else {
+          moveToFirst(channelMessageButton);
+        }
         var currentChannel;
         if (typeof(myChannel) != "undefined"){
           currentChannel = $('#join-' + myChannel.uniqueName);
         } else {
           currentChannel = [];
         }
-        if (messageChannel[0] != currentChannel[0]){
-          messageChannel.addClass('unread-messages');
+        if (channelMessageButton[0] != currentChannel[0]){
+          channelMessageButton.addClass('unread-messages');
         }
       });
     }
@@ -551,6 +559,11 @@ $(function() {
 
     function moveToFirst(item){
       item.parent().prepend(item);
+    }
+
+    function moveToMessages(channel){
+      $('#messages-container').prepend(storedMessageBoards[channel.uniqueName]);
+      $('#messages-sidebar').prepend(storedButtons[channel.uniqueName]);
     }
 
     function sendChannelMessage(){
