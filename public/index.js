@@ -19,7 +19,6 @@ $(function() {
   // will have in this sample app
   var myChannel; // current channel
   var myChannels = {}; // stores all channels by uniqueName as key
-  var channelsToLeave = {}; // stores all channels by uniqueName as key
   var storedButtons = {}; // stores all buttons by uniqueName as key
   var storedMessageBoards = {}; // stores all message boards by uniqueName as key
   var newChannel = false;
@@ -85,7 +84,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM2MTU4NjYiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzYxOTQ2NiwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.8Q2BuL9WHQa5x1qzhkzyaAiv3LE4eEUXie3Jtmy_67U';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM2NTQwNTMiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzY1NzY1MywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.9xfLUWw-Bm5_dpOinjgctX1hPjhA5V3BDUhx2Tl3MhI';
 
       $('.info').remove();
       username = data.identity;
@@ -132,7 +131,6 @@ $(function() {
       messagingClient.on('channelAdded', function(channel) {
         if (conciergeLogin){
           myChannels[channel.uniqueName] = channel;
-          channelsToLeave[channel.uniqueName] = channel;
           initNewChannel(channel);
         }
       });
@@ -144,14 +142,6 @@ $(function() {
       messagingClient.on('channelUpdated', function(channel) {
         // console.log('Channel updates for ' + channel.friendlyName + ': ' + channel.sid);
       });
-    }
-
-    function leaveInboxChannel(channel){
-      var ch = channelsToLeave[channel.uniqueName];
-      if (ch){
-        console.log('gonna leave new channel now');
-        leaveChannel(ch);
-      }
     }
 
     function navListener(){
@@ -386,20 +376,20 @@ $(function() {
     }
 
     function buildChannelButton(channel, sidebar){
-      var channelButton = '<div id="join-' + channel.uniqueName + '" class="join">' + channel.friendlyName + '</div>';
+      var channelButton = '<div id="join-' + channel.uniqueName + '" class="join" name="' + channel.friendlyName + '">' + channel.friendlyName + '</div>';
       sidebar.prepend(channelButton);
       storedButtons[channel.uniqueName] = $('#join-' + channel.uniqueName);
     }
 
     function buildChannelPage(channel, messageBoard){
-      var newChatWindow = '<div id="' + channel.uniqueName + '-messages" class="messages"></div>';
+      var newChatWindow = '<div id="' + channel.uniqueName + '-messages" class="messages" name="' + channel.friendlyName + '"></div>';
       messageBoard.prepend(newChatWindow);
       storedMessageBoards[channel.uniqueName] = $('#' + channel.uniqueName + '-messages');
     }
 
     function sidebarChannelMessagesListener(channel){
-      channel.on('messageAdded', function(message, channel) {
-        var messageChannel = $('#join-' + message.channel.uniqueName);
+      channel.on('messageAdded', function(message) {
+        var messageChannel = storedButtons[message.channel.uniqueName];
         moveToFirst(messageChannel);
         var currentChannel;
         if (typeof(myChannel) != "undefined"){
@@ -483,7 +473,6 @@ $(function() {
         joinAndInit = false;
         console.log('gunu init');
         initChannelOptions(channel);
-        // leaveInboxChannel(channel);
       });
     }
 
@@ -525,7 +514,7 @@ $(function() {
       console.log('init \'' + channel.friendlyName + '\' channel options');
       sendStoredMessages(channel);
       messagesListener(channel);
-      sendChannelMessage(channel);
+      sendChannelMessage();
       leaveChannelListener(channel);
       deleteChannelListener(channel);
       memberEventsListener(channel);
@@ -564,13 +553,13 @@ $(function() {
       item.parent().prepend(item);
     }
 
-    function sendChannelMessage(channel){
+    function sendChannelMessage(){
       var $input = $('#chat-input');
       $input.unbind();
       $input.on('keydown', function(e) {
         e.stopImmediatePropagation();
         if (e.keyCode == 13) {
-          channel.sendMessage($input.val());
+          myChannel.sendMessage($input.val());
           $input.val('');
           // TODO: show face
         }
