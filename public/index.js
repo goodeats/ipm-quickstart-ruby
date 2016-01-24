@@ -3,11 +3,12 @@ $(function() {
   var $chatWindow = $('#init-messages');
   var chatWindows = {'messages': $chatWindow,
                         'inbox': $('#inbox-messages'),
-                         'team': $('#team-messages')}; // stores active channel for each activeWindow
+                         'team': $('#team-messages')}; // stores active channel for each activeNavContainer
   var header = $('.nav-header');
   var windowHeader = $('.nav-channel-title');
-  var activeWindow = $('#messages-container');
+  var activeNavContainer = $('#messages-container');
   var activeSidebar = $('#messages-sidebar');
+  var activeSidebarNav = $('#sidebar-nav-messages');
 
   // Manages the state of our access token we got from the server
   var accessManager;
@@ -84,7 +85,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM2NTQwNTMiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzY1NzY1MywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.9xfLUWw-Bm5_dpOinjgctX1hPjhA5V3BDUhx2Tl3MhI';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM2NTYyMjkiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzY1OTgyOSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.KF_RhL2nHTYgK2zEq9pkdO-tLYpHyOaKgp5w2u988MM';
 
       $('.info').remove();
       username = data.identity;
@@ -148,26 +149,35 @@ $(function() {
       var sidebarNavButton = $('.sidebar-nav-button');
       sidebarNavButton.on('click', function(e){
         if (!$(this).hasClass('active')){
-          // toggle nav buttons
-          $('.sidebar-nav-button.active').toggleClass('active');
-          $(this).toggleClass('active');
-
-          // find target navs
-          var activeWindowId = $(this).attr('id').replace('sidebar-nav-', '');
-          newactiveWindow = $('#' + activeWindowId + '-container');
-          newSidebar = $('#' + activeWindowId + '-sidebar');
-
-          activeWindow.toggleClass('active');
-          newactiveWindow.toggleClass('active');
-          activeSidebar.toggleClass('active');
-          newSidebar.toggleClass('active');
-          activeWindow = newactiveWindow;
-          activeSidebar = newSidebar;
-
-          $chatWindow = activeWindow.find('.messages.active'); // sets new chatWindow
-          storeActiveWindowChannel($chatWindow);
+          var nav = $(this).attr('id').replace('sidebar-nav-', '');
+          showAsActiveNav(nav);
         }
       });
+    }
+
+    function showAsActiveNav(nav){
+      newactiveNavContainer = $('#' + nav + '-container'); // new nav container
+      newSidebar = $('#' + nav + '-sidebar'); // new nav sidebar
+      newSidebarNav = $('#sidebar-nav-' + nav);
+
+      // toggle nav buttons
+      activeSidebarNav.toggleClass('active');
+      newSidebarNav.toggleClass('active');
+
+      // toggle nav container
+      activeNavContainer.toggleClass('active');
+      newactiveNavContainer.toggleClass('active');
+
+      // toggle sidebar
+      activeSidebar.toggleClass('active');
+      newSidebar.toggleClass('active');
+
+      activeNavContainer = newactiveNavContainer;
+      activeSidebar = newSidebar;
+      activeSidebarNav = newSidebarNav;
+
+      $chatWindow = activeNavContainer.find('.messages.active'); // sets new chatWindow
+      storeactiveNavContainerChannel($chatWindow);
     }
 
     var totalChannels;
@@ -510,12 +520,12 @@ $(function() {
       // set active channel for window
       $chatWindow = uniqueChannel;
       $chatWindow.scrollTop($chatWindow[0].scrollHeight);
-      storeActiveWindowChannel($chatWindow);
+      storeactiveNavContainerChannel($chatWindow);
     }
 
-    function storeActiveWindowChannel(channel){
-      var activeWindowId = activeWindow.attr('id').replace('-container', '');
-      chatWindows[activeWindowId] = $chatWindow;
+    function storeactiveNavContainerChannel(channel){
+      var nav = activeNavContainer.attr('id').replace('-container', '');
+      chatWindows[nav] = $chatWindow;
     }
 
     function initChannelOptions(channel){
