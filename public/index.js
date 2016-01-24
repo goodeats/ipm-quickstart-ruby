@@ -85,7 +85,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM2MDU3ODAiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzYwOTM4MCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.NPfEf3rPXrN0u_NLHK4Xj6qFvn1Ncv_P-4WEx3Ds8Hw';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM2MDk0OTgiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzYxMzA5OCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.R3gDWfshzXdRZkJlgdajoeH8ScK62cs9-le1vUWGPrM';
 
       $('.info').remove();
       username = data.identity;
@@ -143,7 +143,6 @@ $(function() {
       // A channel's attributes or metadata have changed.
       messagingClient.on('channelUpdated', function(channel) {
         // console.log('Channel updates for ' + channel.friendlyName + ': ' + channel.sid);
-        leaveInboxChannel(channel);
       });
     }
 
@@ -254,9 +253,10 @@ $(function() {
     }
 
     var channelsToSortByLastUpdate = [];
+    var channelsIAmNotIn = [];
     function getLastChannelMessage(channel){
       console.log('getting message');
-      channel.getMessages(1).then(function(messages) {
+      channel.getMessages().then(function(messages) {
         var channelWithLastUpdate = {};
         channelWithLastUpdate.channel = channel;
         if (messages.length > 0){
@@ -264,13 +264,29 @@ $(function() {
         } else {
           channelWithLastUpdate.lastUpdate = channel.dateCreated;
         }
-        channelsToSortByLastUpdate.push(channelWithLastUpdate);
+        if (findMeInMessages(messages)){
+          channelsToSortByLastUpdate.push(channelWithLastUpdate);
+        } else {
+          console.log('I have no messages in ' + channel.friendlyName);
+          channelsIAmNotIn.push(channelWithLastUpdate);
+        }
         sortChannelList();
       });
     }
 
+    function findMeInMessages(messages){
+      for (var i = messages.length - 1; i >= 0; i--) {
+        var message = messages[i];
+        if (message.author == username){
+          return true;
+        }
+      }
+    }
+
     function sortChannelList(){
-      if (myChannelsCount === channelsToSortByLastUpdate.length){
+      if (myChannelsCount === channelsToSortByLastUpdate.length + channelsIAmNotIn.length){
+        console.log(channelsToSortByLastUpdate);
+        console.log(channelsIAmNotIn);
         channelsToSortByLastUpdate.sort(function(a, b){
           var channelA = a.lastUpdate;
           var channelB = b.lastUpdate;
@@ -373,6 +389,7 @@ $(function() {
         } else {
           console.log('this channel exists');
           initChannelOptions(channel);
+          getChannelMessages(channel);
           showAsActiveChannel(channel.uniqueName);
         }
       });
@@ -388,6 +405,7 @@ $(function() {
         joinAndInit = false;
         console.log('gunu init');
         initChannelOptions(channel);
+        // leaveInboxChannel(channel);
       });
     }
 
@@ -428,9 +446,6 @@ $(function() {
     function initChannelOptions(channel){
       console.log('init \'' + channel.friendlyName + '\' channel options');
       sendStoredMessages(channel);
-      if (!newChannel){
-        getChannelMessages(channel);
-      }
       messagesListener(channel);
       sendChannelMessage(channel);
       leaveChannelListener(channel);
