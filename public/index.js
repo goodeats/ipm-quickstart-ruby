@@ -85,7 +85,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM2NTYyMjkiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzY1OTgyOSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.KF_RhL2nHTYgK2zEq9pkdO-tLYpHyOaKgp5w2u988MM';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM2NjM0NDgiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzY2NzA0OCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.IGwcJZzNDctmpcK7P1UK0RJDPaD-06cDsqAQC_cBX14';
 
       $('.info').remove();
       username = data.identity;
@@ -156,6 +156,7 @@ $(function() {
     }
 
     function showAsActiveNav(nav){
+      console.log('showing "' + nav + '" as active');
       newactiveNavContainer = $('#' + nav + '-container'); // new nav container
       newSidebar = $('#' + nav + '-sidebar'); // new nav sidebar
       newSidebarNav = $('#sidebar-nav-' + nav);
@@ -172,12 +173,70 @@ $(function() {
       activeSidebar.toggleClass('active');
       newSidebar.toggleClass('active');
 
+      // toggle window header
+      showAsActiveWindowHeader(chatWindows[nav].attr('name'));
+
       activeNavContainer = newactiveNavContainer;
       activeSidebar = newSidebar;
       activeSidebarNav = newSidebarNav;
 
       $chatWindow = activeNavContainer.find('.messages.active'); // sets new chatWindow
       storeactiveNavContainerChannel($chatWindow);
+    }
+
+    function joinExistingChannelListener(){
+      var join = $('.join');
+      join.on('click', function(e){
+        e.stopImmediatePropagation();
+        var this_button = $(this);
+        if (!this_button.hasClass('active')){ // don't switch if already on clicked channel
+          this_button.addClass('pending');
+          var uniqueName = this_button.attr('id').replace('join-', '');
+          var channel = myChannels[uniqueName]; // get the channel by uniqueName
+          if (storedMessageBoards[uniqueName].is(':empty')){ // get messages if the message board is empty
+            getChannelMessages(channel);
+          }
+          showAsActiveChannel(channel);
+        }
+        $('#chat-input').focus(); // be ready to type regardless if already on clicked channel
+      });
+    }
+
+    function showAsActiveChannel(channel){
+      console.log('showing "' + channel.friendlyName + '" as active');
+      myChannel = myChannels[channel.uniqueName];
+      // toggle button
+      activeSidebar.find('.join.active').toggleClass('active');
+      var newActiveButton = storedButtons[channel.uniqueName];
+      newActiveButton.toggleClass('pending active');
+      newActiveButton.removeClass('unread-messages');
+
+      // toggle window
+      $chatWindow.toggleClass('active');
+      var uniqueChannel = storedMessageBoards[myChannel.uniqueName];
+      uniqueChannel.toggleClass('active');
+
+      // toggle header
+      showAsActiveWindowHeader(myChannel);
+      // windowHeader.text(myChannel.friendlyName);
+
+      // set active channel for window
+      $chatWindow = uniqueChannel;
+      $chatWindow.scrollTop($chatWindow[0].scrollHeight);
+      storeactiveNavContainerChannel($chatWindow);
+    }
+
+    function showAsActiveWindowHeader(channel){
+      if (typeof channel === 'string'){
+        windowHeader.text(channel);
+      } else {
+        windowHeader.text(channel.friendlyName);
+      }
+    }
+
+    function storeactiveNavContainerChannel(channel){
+      var nav = activeNavContainer.attr('id').replace('-container', '');
+      chatWindows[nav] = $chatWindow;
     }
 
     var totalChannels;
@@ -319,6 +378,7 @@ $(function() {
           var channel = channelsToSortByLastUpdate[i].channel;
           buildChannelButton(channel, myChannelsSidebar);
           buildChannelPage(channel, channelMessageBoard);
+          initChannelOptions(channel);
         }
         joinExistingChannelListener();
         sortUnassigned();
@@ -421,28 +481,6 @@ $(function() {
       });
     }
 
-    function joinExistingChannelListener(){
-      var join = $('.join');
-      join.on('click', function(e){
-        e.stopImmediatePropagation();
-        var this_button = $(this);
-        if (!this_button.hasClass('active')){
-          this_button.addClass('pending');
-          this_button.removeClass('unread-messages');
-          var uniqueName = this_button.attr('id').replace('join-', '');
-          var uniqueChannel = $('#' + uniqueName + '-messages');
-          if (uniqueChannel.is(':empty')){
-            var friendlyName = this_button.text();
-            findOrCreateChannel(uniqueName, friendlyName);
-          } else {
-            console.log('showing as active');
-            showAsActiveChannel(uniqueName);
-          }
-        }
-        $('#chat-input').focus();
-      });
-    }
-
     var joinAndInit = false;
     function findOrCreateChannel(uniqueName, friendlyName){
       var promise = messagingClient.getChannelByUniqueName(uniqueName);
@@ -470,13 +508,13 @@ $(function() {
               console.log('gunu init');
               initChannelOptions(channel);
             });
-            showAsActiveChannel(channel.uniqueName);
+            showAsActiveChannel(channel);
           });
         } else {
           console.log('this channel exists');
           initChannelOptions(channel);
           getChannelMessages(channel);
-          showAsActiveChannel(channel.uniqueName);
+          showAsActiveChannel(channel);
         }
       });
     }
@@ -500,32 +538,6 @@ $(function() {
         print('Joined ' + channel.friendlyName + ' as <span class="me">' + username + '</span>.', true, storedMessageBoards[channel.uniqueName]);
         joinAndInit = true;
       });
-    }
-
-    function showAsActiveChannel(channel){
-      myChannel = myChannels[channel];
-      // toggle button
-      activeSidebar.find('.join.active').toggleClass('active');
-      var activate_button = $('#join-' + channel);
-      activate_button.toggleClass('pending active');
-
-      // toggle window
-      $chatWindow.toggleClass('active');
-      var uniqueChannel = storedMessageBoards[myChannel.uniqueName];
-      uniqueChannel.toggleClass('active');
-
-      // toggle header
-      windowHeader.text(myChannel.friendlyName);
-
-      // set active channel for window
-      $chatWindow = uniqueChannel;
-      $chatWindow.scrollTop($chatWindow[0].scrollHeight);
-      storeactiveNavContainerChannel($chatWindow);
-    }
-
-    function storeactiveNavContainerChannel(channel){
-      var nav = activeNavContainer.attr('id').replace('-container', '');
-      chatWindows[nav] = $chatWindow;
     }
 
     function initChannelOptions(channel){
