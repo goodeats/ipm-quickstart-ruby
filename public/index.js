@@ -85,7 +85,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM2MDk0OTgiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzYxMzA5OCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.R3gDWfshzXdRZkJlgdajoeH8ScK62cs9-le1vUWGPrM';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM2MTIwMTkiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzYxNTYxOSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.Zpe0HWGsKQzPeVGubiJYdhyEouQ0HPnVpg1jm-UWJ2U';
 
       $('.info').remove();
       username = data.identity;
@@ -287,9 +287,15 @@ $(function() {
       if (myChannelsCount === channelsToSortByLastUpdate.length + channelsIAmNotIn.length){
         console.log(channelsToSortByLastUpdate);
         console.log(channelsIAmNotIn);
+        // sortChannelListByDate(channelsToSortByLastUpdate);
         channelsToSortByLastUpdate.sort(function(a, b){
           var channelA = a.lastUpdate;
           var channelB = b.lastUpdate;
+          if (channelA > channelB){
+            console.log(a.friendlyname + ': ' + a.lastUpdate + ' > ' + b.friendlyname + ': ' + b.lastUpdate);
+          } else {
+            console.log(a.friendlyname + ': ' + a.lastUpdate + ' < ' + b.friendlyname + ': ' + b.lastUpdate);
+          }
           return channelA > channelB ? 1 : -1;
         });
         var myChannelsSidebar = $('#messages-sidebar');
@@ -305,6 +311,14 @@ $(function() {
         // console.log('myChannels length: ' + myChannelsCount);
         // console.log('channelsToSortByLastUpdate length: ' + channelsToSortByLastUpdate.length);
       }
+    }
+
+    function sortChannelListByDate(channels){
+      // channels.sort(function(a, b){
+      //   var channelA = a.lastUpdate;
+      //   var channelB = b.lastUpdate;
+      //   return channelA > channelB ? 1 : -1;
+      // });
     }
 
     function buildChannelButton(channel, sidebar){
