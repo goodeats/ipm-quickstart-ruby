@@ -428,11 +428,13 @@ $(function() {
     function initChannelOptions(channel){
       console.log('init \'' + channel.friendlyName + '\' channel options');
       sendStoredMessages(channel);
-      getChannelMessages(channel);
+      if (!newChannel){
+        getChannelMessages(channel);
+      }
       messagesListener(channel);
       sendChannelMessage(channel);
       leaveChannelListener(channel);
-      deleteChannel(channel);
+      deleteChannelListener(channel);
       memberEventsListener(channel);
     }
 
@@ -497,15 +499,20 @@ $(function() {
       });
     }
 
-    function deleteChannel(channel){
+    function deleteChannelListener(channel){
       var delete_button = $('.delete');
       delete_button.show();
       delete_button.on('click', function(e){
         e.preventDefault();
-        // Delete a previously created Channel
         channel.delete().then(function(channel) {
           console.log("Deleted channel: " + channel.friendlyName);
         });
+      });
+    }
+
+    function deleteChannel(channel){
+      channel.delete().then(function(ch){
+        console.log('I just deleted "' + ch.friendlyName + '"');
       });
     }
 
