@@ -19,6 +19,7 @@ $(function() {
   // will have in this sample app
   var myChannel; // current channel
   var myChannels = {}; // stores all channels by uniqueName as key
+  var channelsToLeave = {}; // stores all channels by uniqueName as key
   var storedButtons = {}; // stores all buttons by uniqueName as key
   var storedMessageBoards = {}; // stores all message boards by uniqueName as key
   var newChannel = false;
@@ -84,7 +85,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM1ODY3MzgiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzU5MDMzOCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.OZfYfLpXWIqiQGGNLcYNUVuLR2lqocnXq64TUrhoQpk';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM2MDU3ODAiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzYwOTM4MCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.NPfEf3rPXrN0u_NLHK4Xj6qFvn1Ncv_P-4WEx3Ds8Hw';
 
       $('.info').remove();
       username = data.identity;
@@ -109,11 +110,11 @@ $(function() {
         if (e.keyCode == 13) {
           if (input.val() == 'login'){
             conciergeLogin = true;
-            input.unbind();
+            input.unbind(); // take off login or new channel
             navListener();
             getAllChannels();
           } else {
-            var uniqueName = 'newchat-' + Date.now().toString();
+            var uniqueName = 'newchat-' + Date.now().toString(); // TODO: add merchant name
             var friendlyName = input.val();
             newChannelMessages.push(input.val());
             if (canCreateChannel){
@@ -131,6 +132,7 @@ $(function() {
       messagingClient.on('channelAdded', function(channel) {
         if (conciergeLogin){
           myChannels[channel.uniqueName] = channel;
+          channelsToLeave[channel.uniqueName] = channel;
           initNewChannel(channel);
         }
       });
@@ -141,7 +143,16 @@ $(function() {
       // A channel's attributes or metadata have changed.
       messagingClient.on('channelUpdated', function(channel) {
         // console.log('Channel updates for ' + channel.friendlyName + ': ' + channel.sid);
+        leaveInboxChannel(channel);
       });
+    }
+
+    function leaveInboxChannel(channel){
+      var ch = channelsToLeave[channel.uniqueName];
+      if (ch){
+        console.log('gonna leave new channel now');
+        leaveChannel(ch);
+      }
     }
 
     function navListener(){
@@ -172,6 +183,7 @@ $(function() {
 
     var totalChannels;
     var myChannelsCount = 0;
+    var emptyChannelsCount = 0;
     var allChannels;
 
     function getAllChannels(){
@@ -203,26 +215,30 @@ $(function() {
             if (member.identity === username){ // TODO: find better method of getting the current user than by name
               myChannels[ch.uniqueName] = ch;
               myChannelsCount++;
-              // console.log('index: ' + index);
-              // console.log('totalChannels: ' + totalChannels);
-              // console.log('myChannelsCount: ' + myChannelsCount);
               initOrNext();
             }
           }
         });
       } else {
         // TODO: push to unassigned from here
-        // console.log('index: ' + index);
-        // console.log('totalChannels: ' + totalChannels);
-        // console.log('myChannelsCount: ' + myChannelsCount);
+        emptyChannelsCount++;
         initOrNext();
       }
     }
 
     function initOrNext(){
+      console.log('index: ' + index);
+      console.log('totalChannels: ' + totalChannels);
+      console.log('myChannelsCount: ' + myChannelsCount);
+      console.log('emptyChannelsCount: ' + emptyChannelsCount);
       if (index === totalChannels){ // gone through all channels
-        console.log('gonna init');
-        initMyChannels();
+        if (myChannelsCount === 0){
+          console.log('get all channels again');
+          getAllChannels();
+        } else {
+          console.log('gonna init');
+          initMyChannels();
+        }
       } else {
         nextChannel();
       }
@@ -239,6 +255,7 @@ $(function() {
 
     var channelsToSortByLastUpdate = [];
     function getLastChannelMessage(channel){
+      console.log('getting message');
       channel.getMessages(1).then(function(messages) {
         var channelWithLastUpdate = {};
         channelWithLastUpdate.channel = channel;
@@ -316,6 +333,7 @@ $(function() {
             var friendlyName = this_button.text();
             findOrCreateChannel(uniqueName, friendlyName);
           } else {
+            console.log('showing as active');
             showAsActiveChannel(uniqueName);
           }
         }
@@ -323,6 +341,7 @@ $(function() {
       });
     }
 
+    var joinAndInit = false;
     function findOrCreateChannel(uniqueName, friendlyName){
       var promise = messagingClient.getChannelByUniqueName(uniqueName);
       promise.then(function(channel) {
@@ -344,12 +363,16 @@ $(function() {
             storedButtons[channel.uniqueName].addClass('pending');
             joinExistingChannelListener();
             joinChannel(channel);
+            $.when(joinAndInit).then(function(){
+              joinAndInit = false;
+              console.log('gunu init');
+              initChannelOptions(channel);
+            });
             showAsActiveChannel(channel.uniqueName);
           });
         } else {
           console.log('this channel exists');
-          myChannels[uniqueName] = channel;
-          joinChannel(channel);
+          initChannelOptions(channel);
           showAsActiveChannel(channel.uniqueName);
         }
       });
@@ -359,21 +382,20 @@ $(function() {
       buildChannelButton(channel, $('#inbox-sidebar'));
       buildChannelPage(channel, $('#inbox-container'));
       // TODO: wait for message to be added from user
-      waitForNewChannelMessage(channel);
-    }
-
-    function waitForNewChannelMessage(channel){
+      joinExistingChannelListener();
       joinChannel(channel);
-      // got the channel, added the button and page
-      // this may have been asking for channel messages before the users array pushed them in
-      // channel listener could push
-      // channel.leave(); // leave after getting messages
+      $.when(joinAndInit).then(function(){
+        joinAndInit = false;
+        console.log('gunu init');
+        initChannelOptions(channel);
+      });
     }
 
     function joinChannel(ch) {
+      console.log('joining channel');
       ch.join().then(function(channel) {
         print('Joined ' + channel.friendlyName + ' as <span class="me">' + username + '</span>.', true, storedMessageBoards[channel.uniqueName]);
-        initChannelOptions(ch);
+        joinAndInit = true;
       });
     }
 
@@ -409,7 +431,7 @@ $(function() {
       getChannelMessages(channel);
       messagesListener(channel);
       sendChannelMessage(channel);
-      leaveChannel(channel);
+      leaveChannelListener(channel);
       deleteChannel(channel);
       memberEventsListener(channel);
     }
@@ -425,6 +447,7 @@ $(function() {
     }
 
     function getChannelMessages(channel){
+      console.log('getting channel messages, bro');
       channel.getMessages().then(function(messages) {
         var totalMessages = messages.length;
         print('Total Messages: ' + totalMessages, true, storedMessageBoards[channel.uniqueName]);
@@ -459,13 +482,18 @@ $(function() {
       });
     }
 
-    function leaveChannel(channel){
+    function leaveChannelListener(channel){
       var leave_button = $('.leave');
       leave_button.show();
       leave_button.on('click', function(e){
         e.preventDefault();
-        console.log('I want to leave');
-        channel.leave();
+        leaveChannel(channel);
+      });
+    }
+
+    function leaveChannel(channel){
+      channel.leave().then(function(ch){
+        console.log('I just left "' + ch.friendlyName + '"');
       });
     }
 
@@ -483,25 +511,21 @@ $(function() {
 
     function memberEventsListener(channel){
       // Listen for members joining a channel
-      channel.on('memberJoined', function(member, messages) {
-        print(member.identity + ' has joined the channel.', true);
-        for (i=0; i<messages.length; i++) {
-          var message = messages[i];
-          console.log('Author:' + message.author);
-          printMessage(member.identity + 'has joined the channel.', member.lastConsumptionTimestamp, message.body, storedMessageBoards[channel.uniqueName]);
-        }
+      channel.on('memberJoined', function(member) {
+        print(member.identity + ' has joined the channel.', true, storedMessageBoards[channel.uniqueName]);
       });
-      // Listen for members joining a channel
+
+      console.log('can leave ' + channel.friendlyName);
       channel.on('memberLeft', function(member) {
-        print(member.identity + ' has left the channel.', true);
+        print(member.identity + ' has left the channel.', true, storedMessageBoards[channel.uniqueName]);
       });
       // Listen for members typing
       channel.on('typingStarted', function(member) {
-        print(member.identity + ' is currently typing.', true);
+        print(member.identity + ' is currently typing.', true, storedMessageBoards[channel.uniqueName]);
       });
       // Listen for members typing
       channel.on('typingEnded', function(member) {
-        print(member.identity + ' has stopped typing.', true);
+        print(member.identity + ' has stopped typing.', true, storedMessageBoards[channel.uniqueName]);
       });
     }
 
