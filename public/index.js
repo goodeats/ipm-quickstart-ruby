@@ -254,6 +254,7 @@ $(function() {
 
     var channelsToSortByLastUpdate = [];
     var channelsIAmNotIn = [];
+    var channelsTaken = [];
     function getLastChannelMessage(channel){
       console.log('getting message');
       channel.getMessages().then(function(messages) {
@@ -264,8 +265,11 @@ $(function() {
         } else {
           channelWithLastUpdate.lastUpdate = channel.dateCreated;
         }
-        if (findMeInMessages(messages)){
+        if (findMeInMessages(messages) == 1){
           channelsToSortByLastUpdate.push(channelWithLastUpdate);
+        } else if (findMeInMessages(messages) == 2){
+          console.log('someone else has ' + channel.friendlyName);
+          channelsTaken.push(channelWithLastUpdate);
         } else {
           console.log('I have no messages in ' + channel.friendlyName);
           channelsIAmNotIn.push(channelWithLastUpdate);
@@ -275,10 +279,20 @@ $(function() {
     }
 
     function findMeInMessages(messages){
+      var uniqeMembers = []; // unique members in this channel
+      var memberCount = 0;
       for (var i = messages.length - 1; i >= 0; i--) {
         var message = messages[i];
-        if (message.author == username){
-          return true;
+        var messageAuthor = message.author;
+        if (messageAuthor == username){ // if I have any messages
+          return 1; // end it right here
+        }
+        if (jQuery.inArray(messageAuthor, uniqeMembers)){ // if member already counted in array
+          memberCount++;
+          uniqeMembers.push(messageAuthor);
+          if (memberCount > 1){ // if someone is in the chat with the customer
+            return 2;
+          }
         }
       }
     }
@@ -292,9 +306,9 @@ $(function() {
           var channelA = a.lastUpdate;
           var channelB = b.lastUpdate;
           if (channelA > channelB){
-            console.log(a.channel.friendlyname + ': ' + a.lastUpdate + ' > ' + b.channel.friendlyname + ': ' + b.lastUpdate);
+            console.log(a.channel.friendlyName + ': ' + a.lastUpdate + ' > ' + b.channel.friendlyName + ': ' + b.lastUpdate);
           } else {
-            console.log(a.channel.friendlyname + ': ' + a.lastUpdate + ' < ' + b.channel.friendlyname + ': ' + b.lastUpdate);
+            console.log(a.channel.friendlyName + ': ' + a.lastUpdate + ' < ' + b.channel.friendlyName + ': ' + b.lastUpdate);
           }
           return channelA > channelB ? 1 : -1;
         });
@@ -308,6 +322,7 @@ $(function() {
         }
         joinExistingChannelListener();
         sortUnassigned();
+        sortTaken();
       } else {
         // console.log('myChannels length: ' + myChannelsCount);
         // console.log('channelsToSortByLastUpdate length: ' + channelsToSortByLastUpdate.length);
@@ -321,9 +336,9 @@ $(function() {
         var channelA = a.lastUpdate;
         var channelB = b.lastUpdate;
         if (channelA > channelB){
-          console.log(a.channel.friendlyname + ': ' + a.lastUpdate + ' > ' + b.channel.friendlyname + ': ' + b.lastUpdate);
+          console.log(a.channel.friendlyName + ': ' + a.lastUpdate + ' > ' + b.channel.friendlyName + ': ' + b.lastUpdate);
         } else {
-          console.log(a.channel.friendlyname + ': ' + a.lastUpdate + ' < ' + b.channel.friendlyname + ': ' + b.lastUpdate);
+          console.log(a.channel.friendlyName + ': ' + a.lastUpdate + ' < ' + b.channel.friendlyName + ': ' + b.lastUpdate);
         }
         return channelA > channelB ? 1 : -1;
       });
@@ -333,6 +348,30 @@ $(function() {
       for (i = 0; i < channelsIAmNotIn.length; i++){
         var channel = channelsIAmNotIn[i].channel;
         buildChannelButton(channel, myInboxContainer);
+        buildChannelPage(channel, channelMessageBoard);
+      }
+      joinExistingChannelListener();
+    }
+
+    function sortTaken(){
+      console.log(channelsTaken);
+      // sortChannelListByDate(channelsTaken);
+      channelsTaken.sort(function(a, b){
+        var channelA = a.lastUpdate;
+        var channelB = b.lastUpdate;
+        if (channelA > channelB){
+          console.log(a.channel.friendlyName + ': ' + a.lastUpdate + ' > ' + b.channel.friendlyName + ': ' + b.lastUpdate);
+        } else {
+          console.log(a.channel.friendlyName + ': ' + a.lastUpdate + ' < ' + b.channel.friendlyName + ': ' + b.lastUpdate);
+        }
+        return channelA > channelB ? 1 : -1;
+      });
+      var myTeamContainer = $('#team-sidebar');
+      myTeamContainer.find('.loading').remove();
+      var channelMessageBoard = $('#team-container');
+      for (i = 0; i < channelsTaken.length; i++){
+        var channel = channelsTaken[i].channel;
+        buildChannelButton(channel, myTeamContainer);
         buildChannelPage(channel, channelMessageBoard);
       }
       joinExistingChannelListener();
