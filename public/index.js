@@ -85,7 +85,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM2MTIwMTkiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzYxNTYxOSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.Zpe0HWGsKQzPeVGubiJYdhyEouQ0HPnVpg1jm-UWJ2U';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM2MTU4NjYiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzYxOTQ2NiwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.8Q2BuL9WHQa5x1qzhkzyaAiv3LE4eEUXie3Jtmy_67U';
 
       $('.info').remove();
       username = data.identity;
@@ -292,9 +292,9 @@ $(function() {
           var channelA = a.lastUpdate;
           var channelB = b.lastUpdate;
           if (channelA > channelB){
-            console.log(a.friendlyname + ': ' + a.lastUpdate + ' > ' + b.friendlyname + ': ' + b.lastUpdate);
+            console.log(a.channel.friendlyname + ': ' + a.lastUpdate + ' > ' + b.channel.friendlyname + ': ' + b.lastUpdate);
           } else {
-            console.log(a.friendlyname + ': ' + a.lastUpdate + ' < ' + b.friendlyname + ': ' + b.lastUpdate);
+            console.log(a.channel.friendlyname + ': ' + a.lastUpdate + ' < ' + b.channel.friendlyname + ': ' + b.lastUpdate);
           }
           return channelA > channelB ? 1 : -1;
         });
@@ -307,10 +307,35 @@ $(function() {
           buildChannelPage(channel, channelMessageBoard);
         }
         joinExistingChannelListener();
+        sortUnassigned();
       } else {
         // console.log('myChannels length: ' + myChannelsCount);
         // console.log('channelsToSortByLastUpdate length: ' + channelsToSortByLastUpdate.length);
       }
+    }
+
+    function sortUnassigned(){
+      console.log(channelsIAmNotIn);
+      // sortChannelListByDate(channelsIAmNotIn);
+      channelsIAmNotIn.sort(function(a, b){
+        var channelA = a.lastUpdate;
+        var channelB = b.lastUpdate;
+        if (channelA > channelB){
+          console.log(a.channel.friendlyname + ': ' + a.lastUpdate + ' > ' + b.channel.friendlyname + ': ' + b.lastUpdate);
+        } else {
+          console.log(a.channel.friendlyname + ': ' + a.lastUpdate + ' < ' + b.channel.friendlyname + ': ' + b.lastUpdate);
+        }
+        return channelA > channelB ? 1 : -1;
+      });
+      var myInboxContainer = $('#inbox-sidebar');
+      myInboxContainer.find('.loading').remove();
+      var channelMessageBoard = $('#inbox-container');
+      for (i = 0; i < channelsIAmNotIn.length; i++){
+        var channel = channelsIAmNotIn[i].channel;
+        buildChannelButton(channel, myInboxContainer);
+        buildChannelPage(channel, channelMessageBoard);
+      }
+      joinExistingChannelListener();
     }
 
     function sortChannelListByDate(channels){
@@ -551,7 +576,6 @@ $(function() {
         print(member.identity + ' has joined the channel.', true, storedMessageBoards[channel.uniqueName]);
       });
 
-      console.log('can leave ' + channel.friendlyName);
       channel.on('memberLeft', function(member) {
         print(member.identity + ' has left the channel.', true, storedMessageBoards[channel.uniqueName]);
       });
