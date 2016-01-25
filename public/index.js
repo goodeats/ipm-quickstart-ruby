@@ -85,7 +85,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM2NjM0NDgiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzY2NzA0OCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.IGwcJZzNDctmpcK7P1UK0RJDPaD-06cDsqAQC_cBX14';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM2OTIyOTciLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1MzY5NTg5NywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.S0WeXBEbWsEDE9k55bpR4GMrqUhp90dOKZZmr0MDRT8';
 
       $('.info').remove();
       username = data.identity;
@@ -119,7 +119,7 @@ $(function() {
             newChannelMessages.push(input.val());
             if (canCreateChannel){
               canCreateChannel = false;
-              findOrCreateChannel(uniqueName, friendlyName);
+              createChannelAndJoin(uniqueName, friendlyName);
             }
           }
           input.val('');
@@ -193,9 +193,6 @@ $(function() {
           this_button.addClass('pending');
           var uniqueName = this_button.attr('id').replace('join-', '');
           var channel = myChannels[uniqueName]; // get the channel by uniqueName
-          if (storedMessageBoards[uniqueName].is(':empty')){ // get messages if the message board is empty
-            getChannelMessages(channel);
-          }
           showAsActiveChannel(channel);
         }
         $('#chat-input').focus(); // be ready to type regardless if already on clicked channel
@@ -379,6 +376,7 @@ $(function() {
           buildChannelButton(channel, myChannelsSidebar);
           buildChannelPage(channel, channelMessageBoard);
           initChannelOptions(channel);
+          getChannelMessages(channel);
         }
         joinExistingChannelListener();
         sortUnassigned();
@@ -482,40 +480,29 @@ $(function() {
     }
 
     var joinAndInit = false;
-    function findOrCreateChannel(uniqueName, friendlyName){
-      var promise = messagingClient.getChannelByUniqueName(uniqueName);
-      promise.then(function(channel) {
+    function createChannelAndJoin(uniqueName, friendlyName){
+      console.log('creating a channel');
+      messagingClient.createChannel({
+        uniqueName: uniqueName,
+        friendlyName: friendlyName
+      }).then(function(channel) {
+        console.log('channel created: ' + channel.friendlyName);
+        // windowHeader.text(channel.friendlyName); // show as active will do this
         myChannel = channel;
-        if (!myChannel) {
-          // If it doesn't exist, let's create it
-          console.log('creating a channel');
-          messagingClient.createChannel({
-            uniqueName: uniqueName,
-            friendlyName: friendlyName
-          }).then(function(channel) {
-            windowHeader.text(channel.friendlyName);
-            myChannel = channel;
-            myChannels[uniqueName] = channel;
-            newChannel = true;
-            buildChannelButton(channel, $('#messages-sidebar'));
-            buildChannelPage(channel, $('#messages-container'));
-            print('Created "' + channel.friendlyName + '" channel', true, storedMessageBoards[channel.uniqueName]);
-            storedButtons[channel.uniqueName].addClass('pending');
-            joinExistingChannelListener();
-            joinChannel(channel);
-            $.when(joinAndInit).then(function(){
-              joinAndInit = false;
-              console.log('gunu init');
-              initChannelOptions(channel);
-            });
-            showAsActiveChannel(channel);
-          });
-        } else {
-          console.log('this channel exists');
+        myChannels[uniqueName] = channel;
+        newChannel = true;
+        buildChannelButton(channel, $('#messages-sidebar'));
+        buildChannelPage(channel, $('#messages-container'));
+        print('Created "' + channel.friendlyName + '" channel', true, storedMessageBoards[channel.uniqueName]);
+        storedButtons[channel.uniqueName].addClass('pending');
+        joinExistingChannelListener();
+        joinChannel(channel);
+        $.when(joinAndInit).then(function(){
+          joinAndInit = false;
+          console.log('gunu init');
           initChannelOptions(channel);
-          getChannelMessages(channel);
-          showAsActiveChannel(channel);
-        }
+        });
+        showAsActiveChannel(channel);
       });
     }
 
