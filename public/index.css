@@ -70,6 +70,10 @@ html, body {
   min-height: 400px;
 }
 
+#sidebar.active {
+  display: block;
+}
+
 #content-wrapper {
   height: 100%;
   width: 100%;
@@ -259,7 +263,6 @@ html, body {
   }
 
   #sidebar {
-    display: block;
     height: 100%;
     width: 200px;
     position: relative;
@@ -276,7 +279,7 @@ html, body {
     float: right;
   }
 
-  #content {
+  #content.sidebar-active {
     margin-left: 200px;
   }
 }
