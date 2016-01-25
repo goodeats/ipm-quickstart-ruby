@@ -5,7 +5,7 @@ $(function() {
                         'inbox': $('#inbox-messages'),
                          'team': $('#team-messages')}; // stores active channel for each activeNavContainer
   var header = $('.nav-header');
-  var windowHeader = $('.nav-channel-title');
+  var windowHeader = $('.nav-header-title');
   var activeNavContainer = $('#messages-container');
   var activeSidebar = $('#messages-sidebar');
   var activeSidebarNav = $('#sidebar-nav-messages');
@@ -72,9 +72,8 @@ $(function() {
 
   function initTwilio(){
     // Alert the user they have been assigned a random username
-    $('.login').remove();
-    $('#wrapper').show();
-    windowHeader.text('Logging in...');
+    $('.login').remove(); // remove widget
+    $('#wrapper').show(); // show chat window
 
     // Get an access token for the current user, passing a username (identity)
     // and a device ID - for browser-based apps, we'll always just use the
@@ -89,7 +88,7 @@ $(function() {
 
       $('.info').remove();
       username = data.identity;
-      windowHeader.text('Welcome ' + username + '!');
+      // windowHeader.text('Welcome ' + username + '!');
 
       // Initialize the IP messaging client
       accessManager = new Twilio.AccessManager(data.token);
@@ -487,7 +486,6 @@ $(function() {
         friendlyName: friendlyName
       }).then(function(channel) {
         console.log('channel created: ' + channel.friendlyName);
-        // windowHeader.text(channel.friendlyName); // show as active will do this
         myChannel = channel;
         myChannels[uniqueName] = channel;
         newChannel = true;
