@@ -112,6 +112,7 @@ $(function() {
             input.unbind(); // take off login or new channel
             navListener();
             getAllChannels();
+            $('.subheader').addClass('active');
           } else {
             var uniqueName = 'newchat-' + Date.now().toString(); // TODO: add merchant name
             var friendlyName = input.val();

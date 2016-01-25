@@ -10,14 +10,6 @@ html, body {
   font-family: 'Helvetica Neue', Helvetica, sans-serif;
 }
 
-#wrapper {
-  display: none;
-}
-
-#wrapper.active {
-  display: block;
-}
-
 .login {
   height: 100px;
   width: 100%;
@@ -29,26 +21,52 @@ html, body {
   color: #fff;
 }
 
+#wrapper {
+  display: none;
+}
+
+#wrapper.active {
+  display: block;
+}
+
+/* page header */
+
 .nav-header {
   width:100%;
-  height: 100px;
+  height: 60px;
   text-align:center;
   background: #fff;
+  border-bottom: 2px solid #C3B0E9;
   font-size: 30px;
 }
 
 .nav-header-title {
-  float: left;
+  font-size: 36px;
+  line-height: 60px;
   color: #C3B0E9;
+  font-weight: 200;
 }
+
+/* responsive sidebar */
 
 #page-wrapper {
   width: 100%;
   position: absolute;
-  top: 100px;
+  top: 60px;
   bottom: 0;
   color:#dedede;
   background-color: #fff;
+}
+
+#sidebar {
+  height: 100%;
+  width: 200px;
+  position: relative;
+  margin-right: -200px;
+  float: left;
+  overflow: auto;
+  background: #C3B0E9;
+  min-height: 400px;
 }
 
 #content-wrapper {
@@ -66,22 +84,24 @@ html, body {
   background: green;
 }
 
-#sidebar {
-  height: 100%;
-  width: 200px;
-  position: relative;
-  margin-right: -200px;
-  float: left;
-  overflow: auto;
-  background: #C3B0E9;
-  min-height: 400px;
+/* subheader */
+
+.subheader {
+  display: none;
+  height: 50px;
+  width: 100%;
+  background: #9674D8;
+}
+
+.subheader.active {
+  display: block;
 }
 
 #sidebar-nav {
   display: none;
   height: 50px;
-  width: 100%;
-  background: gold;
+  width: 200px;
+  background: #C3B0E9;
 }
 
 #sidebar-nav.active {
@@ -224,5 +244,42 @@ html, body {
     bottom: 20px;
     right: 20px;
     border-radius: 50px;
+  }
+
+  /* responsive sidebar */
+
+  #page-wrapper {
+    width: 100%;
+    position: absolute;
+    top: 60px;
+    bottom: 0;
+    color:#dedede;
+    background-color: #fff;
+  }
+
+  #sidebar {
+    height: 100%;
+    width: 200px;
+    position: relative;
+    margin-right: -200px;
+    float: left;
+    overflow: auto;
+    background: #C3B0E9;
+    min-height: 400px;
+  }
+
+  #content-wrapper {
+    height: 100%;
+    width: 100%;
+    float: right;
+  }
+
+  #content {
+    height: 100%;
+    position: relative;
+    margin-left: 200px;
+    clear: both;
+    overflow: auto;
+    background: green;
   }
 }
