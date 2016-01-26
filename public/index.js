@@ -119,6 +119,7 @@ $(function() {
             $('.subheader').addClass('active');
             $('#sidebar').addClass('active');
             $('#content').addClass('sidebar-active');
+            $('#page-wrapper').addClass('logged-in');
           } else {
             var uniqueName = 'newchat-' + Date.now().toString(); // TODO: add merchant name
             var friendlyName = input.val();

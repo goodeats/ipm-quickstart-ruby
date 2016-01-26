@@ -116,6 +116,7 @@ html, body {
   height: 100%;
   width: 33.33333333%;
   display: inline-block;
+  background: #9674D8;
   color: black;
   float: left;
   text-align: center;
@@ -130,7 +131,7 @@ html, body {
 }
 
 .sidebar-nav-button.active {
-  background: blue;
+  background: #C3B0E9;
 }
 
 /* sidebar */
@@ -146,13 +147,19 @@ html, body {
 .join {
   height: 40px;
   width: 100%;
-  margin-top: 5px;
   background: #f0f0f0;
+  border-bottom: 2px solid #C3B0E9;
+  border-right: 2px solid #C3B0E9;
   font-size: 16px;
   color: #000;
   text-align: center;
   line-height: 40px;
-  cursor: pointer;
+}
+
+.join:focus,
+.join:hover {
+  background: #9674D8;
+  color: #fff;
 }
 
 .join.pending {
@@ -160,7 +167,7 @@ html, body {
 }
 
 .join.active {
-  background: blue;
+  background: #C3B0E9;
   color: #fff;
 }
 
@@ -172,12 +179,13 @@ html, body {
 
 .content-container {
   display: none;
+  height: 80%;
+  height: calc(100% - 92px);
+  width: 100%;
 }
 
 .content-container.active {
-  display: inline-block;
-  height: 80%;
-  width: 100%;
+  display: block;
 }
 
 .message-board {
@@ -239,7 +247,8 @@ html, body {
 /* footer */
 
 #content-footer {
-  height: 20%;
+  /*height: 20%;*/
+  height: 92px;
   width: 100%;
   position: absolute;
   bottom: 0;
@@ -283,6 +292,10 @@ html, body {
     bottom: 0;
     color:#dedede;
     background-color: #fff;
+  }
+
+  #page-wrapper.logged-in {
+    top: 110px;
   }
 
   #sidebar {
