@@ -182,7 +182,7 @@ $(function() {
       activeSidebar = newSidebar;
       activeSidebarNav = newSidebarNav;
 
-      $chatWindow = activeNavContainer.find('.messages.active'); // sets new chatWindow
+      $chatWindow = activeNavContainer.find('.message-board.active'); // sets new chatWindow
       storeactiveNavContainerChannel($chatWindow);
     }
 
@@ -452,7 +452,7 @@ $(function() {
     }
 
     function buildChannelPage(channel, messageBoard){
-      var newChatWindow = '<div id="' + channel.uniqueName + '-messages" class="messages" name="' + channel.friendlyName + '"></div>';
+      var newChatWindow = '<div id="' + channel.uniqueName + '-messages" class="message-board" name="' + channel.friendlyName + '"></div>';
       messageBoard.prepend(newChatWindow);
       storedMessageBoards[channel.uniqueName] = $('#' + channel.uniqueName + '-messages');
     }

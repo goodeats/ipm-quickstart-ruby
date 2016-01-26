@@ -181,7 +181,7 @@ html, body {
 }
 
 
-.messages {
+.message-board {
   display: none;
   background-color: #999;
   padding: 10px;
@@ -190,11 +190,11 @@ html, body {
   overflow-y:auto;
 }
 
-.messages.active {
+.message-board.active {
   display: block;
 }
 
-.messages p {
+.message-board p {
   margin:5px 0;
   padding:0;
 }
