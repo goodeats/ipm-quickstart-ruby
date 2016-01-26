@@ -133,22 +133,14 @@ html, body {
   background: blue;
 }
 
+/* sidebar */
+
 .channel-container {
   display: none;
 }
 
 .channel-container.active {
   display: block;
-}
-
-.content-container {
-  display: none;
-}
-
-.content-container.active {
-  display: inline-block;
-  height: 80%;
-  width: 100%;
 }
 
 .join {
@@ -176,17 +168,43 @@ html, body {
   border-left: 5px solid #8762d3;
 }
 
+/* message board */
+
+.content-container {
+  display: none;
+}
+
+.content-container.active {
+  display: inline-block;
+  height: 80%;
+  width: 100%;
+}
+
+/* footer */
+
+#content-footer {
+  height: 20%;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  background: #8762d3;
+}
+
 #chat-input {
-  display:block;
-  height:52px;
-  margin:10px auto;
-  outline:none;
-  background-color:#fff;
-  border:none;
-  /*border-bottom:1px solid #2B2B2A;*/
-  padding:0;
-  font-size:42px;
-  color:#000;
+  display: block;
+  width: 95%;
+  height: 36px;
+  position: relative;
+  bottom: 0;
+  margin: 10px 2.5%;
+  outline: none;
+  background-color: #fff;
+  border: none;
+  padding: 5px;
+  font-size: 20px;
+  color: #000;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .messages,
