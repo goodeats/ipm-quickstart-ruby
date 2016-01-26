@@ -52,9 +52,11 @@ $(function() {
 
   // Helper function to print chat message to the chat window
   function printMessage(fromUser, timestamp, message, target) {
-    var $user = $('<span class="username">').text(fromUser),
-    $container = $('<div class="message-container">'),
-    $message = $('<p class="message">').text(message);
+    var $user = $('<span class="username">').text(fromUser);
+    $container = $('<div class="message-container">');
+
+    message = formatLinks(message);
+    var $message = $('<p class="message">').html(message);
 
     var date = timestamp.toDateString().slice(0, -5);
     // var time = timestamp.toTimeString().substr(0, 5);
@@ -69,9 +71,7 @@ $(function() {
     if (minute < 10){
       minute = '0' + minute;
     }
-
     var time = hour + ':' + minute;
-
     $timestamp = $('<span class="timestamp">').text(date + ', ' + time + ' ' + ampm);
 
     if (fromUser === username) {
@@ -91,6 +91,37 @@ $(function() {
     }
   }
 
+  function formatLinks(text){
+    var textArr = text.split(' ');
+    for (var i = 0; i < textArr.length; i++){
+      var str = textArr[i];
+      // if (str.indexOf('.') > -1 && isURL(str)){
+      if (str.indexOf('.') > -1 &&
+          textAr[i].slice(0,7) === 'http://' ||
+          textAr[i].slice(0,8) === 'https://' ||
+          textArr[i].slice(0,4) === 'www.'){
+        str = '<a href=' + str + ' target="_blank">' + str + '</a>';
+      }
+    }
+    return textArr.join(' ');
+  }
+
+  function isURL(url){
+    // noticing a lot of erroneous links
+    var strRegex = "^((https|http|ftp|rtsp|mms)?://)"
+            + "?(([0-9a-z_!~*'().&=+$%-]+: )?[0-9a-z_!~*'().&=+$%-]+@)?" //ftp的user@
+            + "(([0-9]{1,3}\.){3}[0-9]{1,3}" // IP形式的URL- 199.194.52.184
+            + "|" // 允许IP和DOMAIN（域名）
+            + "([0-9a-z_!~*'()-]+\.)*" // 域名- www.
+            + "([0-9a-z][0-9a-z-]{0,61})?[0-9a-z]\." // 二级域名
+            + "[a-z]{2,6})" // first level domain- .com or .museum
+            + "(:[0-9]{1,4})?" // 端口- :80
+            + "((/?)|" // a slash isn't required if there is no file name
+            + "(/[0-9a-z_!~*'().;?:@&=+$,%#-]+)+/?)$";
+     var re=new RegExp(strRegex);
+     return re.test(url);
+  }
+
   function initTwilio(){
     // Alert the user they have been assigned a random username
     $('.login').remove(); // remove widget
@@ -105,7 +136,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM3ODc4OTMiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1Mzc5MTQ5MywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.JQFBgFzuVD56mHNeim-g2Aty_SvcEtBd3agooO7Rp44';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM3OTE4NDAiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1Mzc5NTQ0MCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.uF5FdLyMq0fpHcVgiqToWmAfHpLOwiHRoP9GYVnsBZY';
 
       $('.info').remove();
       username = data.identity;
@@ -612,9 +643,6 @@ $(function() {
       $input.on('keydown', function(e) {
         e.stopImmediatePropagation();
         if (e.keyCode == 13) {
-          if ($input.val() == 'delete'){
-            deleteChannel(myChannel);
-          }
           myChannel.sendMessage($input.val());
           $input.val('');
           // TODO: show face
