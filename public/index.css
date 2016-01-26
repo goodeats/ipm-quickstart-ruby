@@ -219,8 +219,8 @@ html, body {
 .username,
 .timestamp {
   display: block;
-  margin: 10px;
-  font-size: 65%;
+  margin: 5px 10px;
+  font-size: 75%;
   color: #999;
 }
 
@@ -229,7 +229,7 @@ html, body {
 }
 
 .timestamp {
-  margin: 5px 10px;
+  font-size: 65%;
   font-style: italic;
 }
 

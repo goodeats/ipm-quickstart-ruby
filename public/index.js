@@ -1,6 +1,6 @@
 $(function() {
   // Get handle to the chat div
-  var $chatWindow = $('#init-messages');
+  var $chatWindow = $('#messages-messages');
   var chatWindows = {'messages': $chatWindow,
                         'inbox': $('#inbox-messages'),
                          'team': $('#team-messages')}; // stores active channel for each activeNavContainer
@@ -23,7 +23,7 @@ $(function() {
   var storedButtons = {}; // stores all buttons by uniqueName as key
   var storedMessageBoards = {}; // stores all message boards by uniqueName as key
   var newChannel = false;
-  var newChannelMessages = [];
+  var newChannelMessages = []; // stores messages sent while the channel is being created
   var conciergeLogin = false;
 
   // The server will assign the client a random username - store that value
@@ -105,7 +105,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM3ODQxOTAiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1Mzc4Nzc5MCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ._7VY05X2esOFluDdqJ1fnIJNIb-rUlD687kxLkIl5mM';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM3ODc4OTMiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1Mzc5MTQ5MywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.JQFBgFzuVD56mHNeim-g2Aty_SvcEtBd3agooO7Rp44';
 
       $('.info').remove();
       username = data.identity;
@@ -223,19 +223,25 @@ $(function() {
       });
     }
 
+    function returnToDefaultNavChannel(nav){
+      $('#' + nav + '-sidebar').find('.join.active').removeClass('active');
+      $('#' + nav + '-container').find('.message-board.active').removeClass('active');
+      $('#' + nav + '-messages').addClass('active');
+    }
+
     function showAsActiveChannel(channel){
       console.log('showing "' + channel.friendlyName + '" as active');
       myChannel = myChannels[channel.uniqueName];
       // toggle button
-      activeSidebar.find('.join.active').toggleClass('active');
+      activeSidebar.find('.join.active').removeClass('active');
       var newActiveButton = storedButtons[channel.uniqueName];
       newActiveButton.toggleClass('pending active');
       newActiveButton.removeClass('unread-messages');
 
       // toggle window
-      $chatWindow.toggleClass('active');
+      $chatWindow.removeClass('active');
       var uniqueChannel = storedMessageBoards[myChannel.uniqueName];
-      uniqueChannel.toggleClass('active');
+      uniqueChannel.addClass('active');
 
       // toggle header
       showAsActiveWindowHeader(myChannel);
@@ -431,6 +437,8 @@ $(function() {
         var channel = channelsIAmNotIn[i].channel;
         buildChannelButton(channel, myInboxContainer);
         buildChannelPage(channel, channelMessageBoard);
+        initChannelOptions(channel);
+        getChannelMessages(channel);
       }
       joinExistingChannelListener();
     }
@@ -485,9 +493,9 @@ $(function() {
         var channelMessageBoard = storedMessageBoards[message.channel.uniqueName];
         if (channelMessageBoard.parent()[0] == $('#inbox-container')[0] && message.author == username){
           moveToMessages(channel);
-          // TODO: show inbox init channel
-          // TODO: switch nav back to messages
-          // TODO: show this channel as active
+          returnToDefaultNavChannel('inbox'); // show inbox init channel
+          showAsActiveNav('messages'); // switch nav back to messages
+          showAsActiveChannel(channel); // TODO: show this channel as active
         } else {
           moveToFirst(channelMessageButton);
         }
