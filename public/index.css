@@ -158,7 +158,7 @@ html, body {
 
 .join:focus,
 .join:hover {
-  background: #9674D8;
+  background: #C3B0E9;
   color: #fff;
 }
 
@@ -167,7 +167,7 @@ html, body {
 }
 
 .join.active {
-  background: #C3B0E9;
+  background: #9674D8;
   color: #fff;
 }
 
@@ -193,35 +193,18 @@ html, body {
   background-color: #f0f0f0;
   padding: 10px;
   height: 100%;
-  margin:0 auto;
-  overflow-y:auto;
+  margin: 0 auto;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .message-board.active {
   display: block;
 }
 
-.message-board p {
-  margin: 5px 0;
-  padding: 0;
-}
-
 .info {
   margin:5px 0;
   font-style:italic;
-}
-
-.username,
-.timestamp {
-  display: block;
-  margin: 10px;
-  font-size: 75%;
-  color: #999;
-}
-
-.username.me,
-.timestamp {
-  color: #8762d3;
 }
 
 .message-container {
@@ -233,11 +216,33 @@ html, body {
   text-align: right;
 }
 
+.username,
+.timestamp {
+  display: block;
+  margin: 10px;
+  font-size: 65%;
+  color: #999;
+}
+
+.username.me {
+  color: #8762d3;
+}
+
+.timestamp {
+  margin: 5px 10px;
+  font-style: italic;
+}
+
 .message {
-  background: #8762d3 ;
+  display: inline-block;
+  max-width: 90%;
+  margin: 0;
+  background: #8762d3;
   padding: 7px 10px;
   border-radius: 7px;
   color: #000;
+  word-break: break-word;
+  word-wrap: break-word;
 }
 
 .message.me {
