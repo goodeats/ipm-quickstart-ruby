@@ -180,32 +180,6 @@ html, body {
   width: 100%;
 }
 
-/* footer */
-
-#content-footer {
-  height: 20%;
-  width: 100%;
-  position: absolute;
-  bottom: 0;
-  background: #8762d3;
-}
-
-#chat-input {
-  display: block;
-  width: 95%;
-  height: 36px;
-  position: relative;
-  bottom: 0;
-  margin: 10px 2.5%;
-  outline: none;
-  background-color: #fff;
-  border: none;
-  padding: 5px;
-  font-size: 20px;
-  color: #000;
-  word-wrap: break-word;
-  word-break: break-word;
-}
 
 .messages,
 .other {
@@ -258,6 +232,34 @@ html, body {
 .message-container .username.me {
   display:inline-block;
   margin-right:5px;
+}
+
+/* footer */
+
+#content-footer {
+  height: 20%;
+  width: 100%;
+  position: relative;
+  bottom: 0;
+  background: #8762d3;
+}
+
+#chat-input {
+  display: block;
+  width: 95%;
+  height: 36px;
+  position: absolute;
+  bottom: 0;
+  margin: 10px 2.5%;
+  outline: none;
+  background-color: #fff;
+  border: none;
+  padding: 5px;
+  font-size: 20px;
+  color: #000;
+  word-wrap: break-word;
+  word-break: break-word;
+  resize: none;
 }
 
 @media screen and (min-width: 400px){
