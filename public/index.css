@@ -180,10 +180,9 @@ html, body {
   width: 100%;
 }
 
-
 .message-board {
   display: none;
-  background-color: #999;
+  background-color: #f0f0f0;
   padding: 10px;
   height: 100%;
   margin:0 auto;
@@ -195,8 +194,8 @@ html, body {
 }
 
 .message-board p {
-  margin:5px 0;
-  padding:0;
+  margin: 5px 0;
+  padding: 0;
 }
 
 .info {
@@ -204,10 +203,17 @@ html, body {
   font-style:italic;
 }
 
+.username,
 .timestamp {
-  margin-left: 15px;
+  display: block;
+  margin: 10px;
   font-size: 75%;
-  color: navy;
+  color: #999;
+}
+
+.username.me,
+.timestamp {
+  color: #8762d3;
 }
 
 .message-container {
@@ -215,21 +221,19 @@ html, body {
   color:#fff;
 }
 
-.message-container .username {
-  display:inline-block;
-  margin-right:5px;
-  font-weight:bold;
-  color:#849091;
+.message-container.me {
+  text-align: right;
 }
 
-.me, .username.me {
-  font-weight:bold;
-  color:cyan;
+.message {
+  background: #8762d3 ;
+  padding: 7px 10px;
+  border-radius: 7px;
+  color: #000;
 }
 
-.message-container .username.me {
-  display:inline-block;
-  margin-right:5px;
+.message.me {
+  background: #999;
 }
 
 /* footer */

@@ -52,14 +52,18 @@ $(function() {
 
   // Helper function to print chat message to the chat window
   function printMessage(fromUser, timestamp, message, target) {
-    var $user = $('<span class="username">').text(fromUser + ':');
+    var $user = $('<span class="username">').text(fromUser),
+    $container = $('<div class="message-container">'),
+    $message = $('<span class="message">').text(message),
+    $timestamp = $('<span class="timestamp">').text(timestamp);
 
     if (fromUser === username) {
       $user.addClass('me');
+      $container.addClass('me');
+      $message.addClass('me');
+      $timestamp.addClass('me');
     }
-    var $message = $('<span class="message">').text(message);
-    var $timestamp = $('<span class="timestamp">').text(timestamp);
-    var $container = $('<div class="message-container">');
+
     $container.append($user).append($message).append($timestamp);
     if (target){
       target.append($container);
@@ -84,7 +88,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM3NzcwMDkiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1Mzc4MDYwOSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.KUdI7b1FbYiWetDzpzqcYiu-44neYRWQX0UF-iAvC18';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM3Nzk2NjciLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1Mzc4MzI2NywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.7jv6rgDov4-QE2wIXnmNGk9rq7480PnIlD8x0CkqWiU';
 
       $('.info').remove();
       username = data.identity;
@@ -582,6 +586,9 @@ $(function() {
       $input.on('keydown', function(e) {
         e.stopImmediatePropagation();
         if (e.keyCode == 13) {
+          if ($input.val() == 'delete'){
+            deleteChannel(myChannel);
+          }
           myChannel.sendMessage($input.val());
           $input.val('');
           // TODO: show face
