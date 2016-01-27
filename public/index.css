@@ -47,6 +47,19 @@ html, body {
   font-weight: 200;
 }
 
+#back-to-sidebar {
+  display: none;
+  position: absolute;
+  left: 10px;
+  line-height: 60px;
+  text-decoration: none;
+  font-size: 50%;
+}
+
+#back-to-sidebar.active {
+  display: inline-block;
+}
+
 /* responsive sidebar */
 
 #page-wrapper {
@@ -58,12 +71,15 @@ html, body {
   background-color: #fff;
 }
 
+#page-wrapper.logged-in {
+  top: 110px;
+}
+
 #sidebar {
-  display: none;
   height: 100%;
-  width: 200px;
+  width: 0;
   position: relative;
-  margin-right: -200px;
+  left: 100%;
   float: left;
   overflow: auto;
   background: #C3B0E9;
@@ -71,13 +87,16 @@ html, body {
 }
 
 #sidebar.active {
-  display: block;
+  width: 100%;
+  left: 0;
+  z-index: 1; /*over content message boards*/
 }
 
 #content-wrapper {
   height: 100%;
   width: 100%;
   float: right;
+  position: absolute;
 }
 
 #content {
@@ -288,6 +307,12 @@ html, body {
     border-radius: 50px;
   }
 
+  /* page header */
+
+  #back-to-sidebar.active {
+    display: none;
+  }
+
   /* responsive sidebar */
 
   #page-wrapper {
@@ -299,19 +324,18 @@ html, body {
     background-color: #fff;
   }
 
-  #page-wrapper.logged-in {
-    top: 110px;
-  }
-
   #sidebar {
     height: 100%;
-    width: 200px;
     position: relative;
     margin-right: -200px;
     float: left;
     overflow: auto;
     background: #C3B0E9;
     min-height: 400px;
+  }
+
+  #sidebar.active {
+    width: 200px;
   }
 
   #content-wrapper {
@@ -322,5 +346,9 @@ html, body {
 
   #content.sidebar-active {
     margin-left: 200px;
+  }
+
+  #sidebar-nav {
+    width: 100%;
   }
 }

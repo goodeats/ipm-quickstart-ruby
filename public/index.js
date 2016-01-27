@@ -97,8 +97,8 @@ $(function() {
       var str = textArr[i];
       // if (str.indexOf('.') > -1 && isURL(str)){
       if (str.indexOf('.') > -1 &&
-          textAr[i].slice(0,7) === 'http://' ||
-          textAr[i].slice(0,8) === 'https://' ||
+          textArr[i].slice(0,7) === 'http://' ||
+          textArr[i].slice(0,8) === 'https://' ||
           textArr[i].slice(0,4) === 'www.'){
         str = '<a href=' + str + ' target="_blank">' + str + '</a>';
       }
@@ -122,6 +122,15 @@ $(function() {
      return re.test(url);
   }
 
+  $('#back-to-sidebar').on('click', function(e){
+    e.preventDefault();
+    $(this).removeClass('active');
+    $('#sidebar').addClass('active');
+    var nav = activeSidebar.attr('id').replace('-sidebar', '');
+    var header = $('#' + nav + '-messages').attr('name');
+    windowHeader.text(header.toUpperCase());
+  });
+
   function initTwilio(){
     // Alert the user they have been assigned a random username
     $('.login').remove(); // remove widget
@@ -136,7 +145,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM3OTE4NDAiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1Mzc5NTQ0MCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.uF5FdLyMq0fpHcVgiqToWmAfHpLOwiHRoP9GYVnsBZY';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM4NTcxNDIiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1Mzg2MDc0MiwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.tmVdIPODf-vOCnH-WDAmM90cHDm7v9h_1iTppktY46M';
 
       $('.info').remove();
       username = data.identity;
@@ -249,6 +258,8 @@ $(function() {
           var uniqueName = this_button.attr('id').replace('join-', '');
           var channel = myChannels[uniqueName]; // get the channel by uniqueName
           showAsActiveChannel(channel);
+          $('#sidebar').removeClass('active');
+          $('#back-to-sidebar').addClass('active');
         }
         $('#chat-input').focus(); // be ready to type regardless if already on clicked channel
       });
@@ -613,8 +624,8 @@ $(function() {
       console.log('getting channel messages, bro');
       channel.getMessages().then(function(messages) {
         var totalMessages = messages.length;
-        print('Total Messages: ' + totalMessages, true, storedMessageBoards[channel.uniqueName]);
-        for (i=0; i<messages.length; i++) {
+        // print('Total Messages: ' + totalMessages, true, storedMessageBoards[channel.uniqueName]);
+        for (i=0; i<totalMessages; i++) {
           var message = messages[i];
           printMessage(message.author, message.dateUpdated, message.body, storedMessageBoards[channel.uniqueName]);
           // TODO: set message index
