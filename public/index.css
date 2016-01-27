@@ -10,6 +10,8 @@ html, body {
   font-family: 'Helvetica Neue', Helvetica, sans-serif;
 }
 
+/* outer */
+
 .login {
   height: 100px;
   width: 100%;
@@ -47,16 +49,23 @@ html, body {
   font-weight: 200;
 }
 
-#back-to-sidebar {
+.sm-header {
   display: none;
   position: absolute;
-  left: 10px;
   line-height: 60px;
   text-decoration: none;
   font-size: 50%;
 }
 
-#back-to-sidebar.active {
+.sm-header.left {
+  left: 10px;
+}
+
+.sm-header.right {
+  right: 10px;
+}
+
+.sm-header.active {
   display: inline-block;
 }
 
@@ -92,6 +101,10 @@ html, body {
   z-index: 1; /*over content message boards*/
 }
 
+#sidebar.sm-hide {
+  width: 0;
+}
+
 #content-wrapper {
   height: 100%;
   width: 100%;
@@ -123,7 +136,7 @@ html, body {
 #sidebar-nav {
   display: none;
   height: 50px;
-  width: 200px;
+  width: 100%;
   background: #C3B0E9;
 }
 
@@ -185,13 +198,24 @@ html, body {
   background: #f9f9f9;
 }
 
-.join.active {
-  background: #9674D8;
+.join.unread-messages {
+  border-left: 5px solid #8762d3;
+}
+
+.join-channel-unread-count {
+  display: none;
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  background: #8762d3;
+  line-height: 10px;
+  padding: 10px;
+  border-radius: 20px;
   color: #fff;
 }
 
-.join.unread-messages {
-  border-left: 5px solid #8762d3;
+.join-channel-unread-count.active {
+  display: block;
 }
 
 /* message board */
@@ -299,6 +323,8 @@ html, body {
 }
 
 @media screen and (min-width: 400px){
+  /*outer*/
+
   .login {
     height: 100px;
     width: 100px;
@@ -309,8 +335,8 @@ html, body {
 
   /* page header */
 
-  #back-to-sidebar.active {
-    display: none;
+  .sm-header.right {
+    display: inline-block;
   }
 
   /* responsive sidebar */
@@ -338,6 +364,10 @@ html, body {
     width: 200px;
   }
 
+  #sidebar.sm-hide {
+    width: 200px;
+  }
+
   #content-wrapper {
     height: 100%;
     width: 100%;
@@ -348,7 +378,22 @@ html, body {
     margin-left: 200px;
   }
 
+  /* subheader */
+
   #sidebar-nav {
-    width: 100%;
+    width: 200px;
   }
+
+  /* sidebar */
+
+  .join.active {
+    background: #9674D8;
+    color: #fff;
+  }
+
+  /* message board */
+
+  /* footer */
+
+
 }

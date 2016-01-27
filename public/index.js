@@ -30,6 +30,7 @@ $(function() {
   // here
   var username;
   $('.login').on('click', function(){
+    $(this).unbind();
     initTwilio();
   });
 
@@ -122,18 +123,36 @@ $(function() {
      return re.test(url);
   }
 
-  $('#back-to-sidebar').on('click', function(e){
+  $('.sm-header.left').on('click', function(e){
     e.preventDefault();
     $(this).removeClass('active');
     $('#sidebar').addClass('active');
+    $('#sidebar').addClass('sm-hide');
+    $('#page-wrapper').addClass('sm-hide');
     var nav = activeSidebar.attr('id').replace('-sidebar', '');
     var header = $('#' + nav + '-messages').attr('name');
     windowHeader.text(header.toUpperCase());
   });
 
+  $('.sm-header.right').on('click', function(e){
+    e.preventDefault();
+    var login = $('.login');
+    login.show();
+    reInitLogin(login);
+    $('#wrapper').hide(); // show chat window
+  });
+
+  function reInitLogin(target){
+    target.on('click', function(){
+      console.log('reinit\'d');
+      $(this).hide();
+      $('#wrapper').show();
+    });
+  }
+
   function initTwilio(){
     // Alert the user they have been assigned a random username
-    $('.login').remove(); // remove widget
+    $('.login').hide(); // remove widget
     $('#wrapper').show(); // show chat window
 
     // Get an access token for the current user, passing a username (identity)
@@ -145,7 +164,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM4NTcxNDIiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1Mzg2MDc0MiwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.tmVdIPODf-vOCnH-WDAmM90cHDm7v9h_1iTppktY46M';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM4NjY0MzAiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1Mzg3MDAzMCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.XNQi8yu1UQrYjTnPRSSnQ-nM1_e5yaPNhToxxtK-ADI';
 
       $('.info').remove();
       username = data.identity;
@@ -258,8 +277,9 @@ $(function() {
           var uniqueName = this_button.attr('id').replace('join-', '');
           var channel = myChannels[uniqueName]; // get the channel by uniqueName
           showAsActiveChannel(channel);
-          $('#sidebar').removeClass('active');
-          $('#back-to-sidebar').addClass('active');
+          $('#sidebar').addClass('sm-hide');
+          $('.sm-header.left').addClass('active');
+          $('#page-wrapper').addClass('sm-hide');
         }
         $('#chat-input').focus(); // be ready to type regardless if already on clicked channel
       });
@@ -279,6 +299,9 @@ $(function() {
       var newActiveButton = storedButtons[channel.uniqueName];
       newActiveButton.toggleClass('pending active');
       newActiveButton.removeClass('unread-messages');
+      var unreadCount = newActiveButton.find('.join-channel-unread-count');
+      unreadCount.removeClass('active');
+      unreadCount.text(0);
 
       // toggle window
       $chatWindow.removeClass('active');
@@ -360,8 +383,7 @@ $(function() {
       console.log('emptyChannelsCount: ' + emptyChannelsCount);
       if (index === totalChannels){ // gone through all channels
         if (myChannelsCount === 0){
-          console.log('get all channels again');
-          getAllChannels();
+          $('.loading').text('Twilio error, please refresh');
         } else {
           console.log('gonna init');
           initMyChannels();
@@ -518,7 +540,10 @@ $(function() {
     }
 
     function buildChannelButton(channel, sidebar){
-      var channelButton = '<div id="join-' + channel.uniqueName + '" class="join" name="' + channel.friendlyName + '">' + channel.friendlyName + '</div>';
+      var channelButton = '<div id="join-' + channel.uniqueName + '" class="join" name="' + channel.friendlyName + '">' +
+                            '<span class="join-channel-name">' + channel.friendlyName + '</span>' +
+                            '<span class="join-channel-unread-count">0</span>' +
+                          '</div>';
       sidebar.prepend(channelButton);
       storedButtons[channel.uniqueName] = $('#join-' + channel.uniqueName);
     }
@@ -548,6 +573,9 @@ $(function() {
           currentChannel = [];
         }
         if (channelMessageButton[0] != currentChannel[0]){
+          var unreadCount = channelMessageButton.find('.join-channel-unread-count');
+          unreadCount.text(parseInt(unreadCount.text()) + 1);
+          unreadCount.addClass('active');
           channelMessageButton.addClass('unread-messages');
         }
       });
