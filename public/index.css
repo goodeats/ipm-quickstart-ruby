@@ -47,11 +47,10 @@ html, body {
   text-align:center;
   background: #fff;
   border-bottom: 2px solid #C3B0E9;
-  font-size: 30px;
 }
 
 .nav-header-title {
-  font-size: 36px;
+  font-size: 24px;
   line-height: 60px;
   color: #C3B0E9;
   font-weight: 200;
@@ -62,7 +61,8 @@ html, body {
   position: absolute;
   line-height: 60px;
   text-decoration: none;
-  font-size: 50%;
+  font-size: 12px;
+  color: #000;
 }
 
 .sm-header.left {
@@ -90,6 +90,10 @@ html, body {
 
 #page-wrapper.logged-in {
   top: 110px;
+}
+
+#page-wrapper.logged-in.sm-hide {
+  top: 60px;
 }
 
 #sidebar {
@@ -343,6 +347,10 @@ html, body {
 
   /* page header */
 
+  .sm-header.left {
+    display: none;
+  }
+
   .sm-header.right {
     display: inline-block;
   }
@@ -356,6 +364,10 @@ html, body {
     bottom: 0;
     color:#dedede;
     background-color: #fff;
+  }
+
+  #page-wrapper.logged-in.sm-hide {
+    top: 110px;
   }
 
   #sidebar {

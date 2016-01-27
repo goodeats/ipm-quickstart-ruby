@@ -127,8 +127,8 @@ $(function() {
     e.preventDefault();
     $(this).removeClass('active');
     $('#sidebar').addClass('active');
-    $('#sidebar').addClass('sm-hide');
-    $('#page-wrapper').addClass('sm-hide');
+    $('#sidebar').removeClass('sm-hide');
+    $('#page-wrapper').removeClass('sm-hide');
     var nav = activeSidebar.attr('id').replace('-sidebar', '');
     var header = $('#' + nav + '-messages').attr('name');
     windowHeader.text(header.toUpperCase());
@@ -178,7 +178,9 @@ $(function() {
 
     function init(){
       console.log('Initialized');
-      prepareInput();
+      setTimeout(function(){
+        prepareInput();
+      }, 5000);
     }
 
     var canCreateChannel = true;
@@ -272,15 +274,13 @@ $(function() {
       join.on('click', function(e){
         e.stopImmediatePropagation();
         var this_button = $(this);
-        if (!this_button.hasClass('active')){ // don't switch if already on clicked channel
-          this_button.addClass('pending');
-          var uniqueName = this_button.attr('id').replace('join-', '');
-          var channel = myChannels[uniqueName]; // get the channel by uniqueName
-          showAsActiveChannel(channel);
-          $('#sidebar').addClass('sm-hide');
-          $('.sm-header.left').addClass('active');
-          $('#page-wrapper').addClass('sm-hide');
-        }
+        this_button.addClass('pending');
+        var uniqueName = this_button.attr('id').replace('join-', '');
+        var channel = myChannels[uniqueName]; // get the channel by uniqueName
+        showAsActiveChannel(channel);
+        $('#sidebar').addClass('sm-hide');
+        $('.sm-header.left').addClass('active');
+        $('#page-wrapper').addClass('sm-hide');
         $('#chat-input').focus(); // be ready to type regardless if already on clicked channel
       });
     }
