@@ -191,6 +191,7 @@ html, body {
 .join {
   height: 40px;
   width: 100%;
+  position: relative;
   background: #f0f0f0;
   border-bottom: 2px solid #C3B0E9;
   border-right: 2px solid #C3B0E9;

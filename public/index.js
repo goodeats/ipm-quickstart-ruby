@@ -164,7 +164,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM4NzAzNzYiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1Mzg3Mzk3NiwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.quKa5s0qM7ZuELm9nVe1DpsXFbjs0YmIjau_sxelnGU';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM5NDc5NTMiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1Mzk1MTU1MywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.BGeoLh-9p0G_lxLvF2Z152XnXUgcpe-uk4m6vty6KRg';
 
       $('.info').remove();
       username = data.identity;
@@ -180,7 +180,7 @@ $(function() {
       console.log('Initialized');
       setTimeout(function(){
         prepareInput();
-      }, 5000);
+      }, 3000);
     }
 
     var canCreateChannel = true;
@@ -294,6 +294,12 @@ $(function() {
     function showAsActiveChannel(channel){
       console.log('showing "' + channel.friendlyName + '" as active');
       myChannel = myChannels[channel.uniqueName];
+
+      // toggle window
+      $chatWindow.removeClass('active');
+      var uniqueChannel = storedMessageBoards[myChannel.uniqueName];
+      uniqueChannel.addClass('active');
+
       // toggle button
       activeSidebar.find('.join.active').removeClass('active');
       var newActiveButton = storedButtons[channel.uniqueName];
@@ -303,19 +309,16 @@ $(function() {
       unreadCount.removeClass('active');
       unreadCount.text(0);
 
-      // toggle window
-      $chatWindow.removeClass('active');
-      var uniqueChannel = storedMessageBoards[myChannel.uniqueName];
-      uniqueChannel.addClass('active');
-
       // toggle header
       showAsActiveWindowHeader(myChannel);
-      // windowHeader.text(myChannel.friendlyName);
 
       // set active channel for window
       $chatWindow = uniqueChannel;
       $chatWindow.scrollTop($chatWindow[0].scrollHeight);
       storeactiveNavContainerChannel($chatWindow);
+
+      // set last index the user has seen
+      myChannel.updateLastConsumedMessageIndex(myChannel.messages.length - 1);
     }
 
     function showAsActiveWindowHeader(channel){
@@ -577,6 +580,8 @@ $(function() {
           unreadCount.text(parseInt(unreadCount.text()) + 1);
           unreadCount.addClass('active');
           channelMessageButton.addClass('unread-messages');
+        } else {
+          message.channel.updateLastConsumedMessageIndex(message.index);
         }
       });
     }
@@ -657,6 +662,22 @@ $(function() {
           var message = messages[i];
           printMessage(message.author, message.dateUpdated, message.body, storedMessageBoards[channel.uniqueName]);
           // TODO: set message index
+        }
+
+        var myLastIndex = channel.lastConsumedMessageIndex;
+        var chLastIndex = totalMessages - 1;
+        var newUnreadCount;
+        if (myLastIndex !== chLastIndex) {
+          if (myLastIndex){
+            newUnreadCount = chLastIndex - myLastIndex;
+          } else {
+            newUnreadCount = totalMessages;
+          }
+          var channelMessageButton = storedButtons[channel.uniqueName];
+          var unreadCount = channelMessageButton.find('.join-channel-unread-count');
+          unreadCount.text(parseInt(unreadCount.text()) + newUnreadCount);
+          unreadCount.addClass('active');
+          channelMessageButton.addClass('unread-messages');
         }
       });
     }
