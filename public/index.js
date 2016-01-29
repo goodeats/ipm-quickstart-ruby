@@ -164,7 +164,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTQwNDY3NTAiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1NDA1MDM1MCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVNlYTk0ZDc2MzQ3OTQ0NjZjOTM3MDE5NzcyZDZhYTUyOSIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.8B6vJHbyI0mIPBzhZnF-aOvgEzWBEzHzFLKeNLdzxn4';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTQwNDgwMzIiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1NDA1MTYzMiwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVNlYTk0ZDc2MzQ3OTQ0NjZjOTM3MDE5NzcyZDZhYTUyOSIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.QyI_4ervg80RjAF_OTWfX9w3etK8zsTiCO7R7uzYIpk';
 
       $('.info').remove();
       username = data.identity;
@@ -274,13 +274,15 @@ $(function() {
       join.on('click', function(e){
         e.stopImmediatePropagation();
         var this_button = $(this);
-        this_button.addClass('pending');
-        var uniqueName = this_button.attr('id').replace('join-', '');
-        var channel = myChannels[uniqueName]; // get the channel by uniqueName
-        showAsActiveChannel(channel);
-        $('#sidebar').addClass('sm-hide');
-        $('.sm-header.left').addClass('active');
-        $('#page-wrapper').addClass('sm-hide');
+        if (!this_button.hasClass('active')){
+          this_button.addClass('pending');
+          var uniqueName = this_button.attr('id').replace('join-', '');
+          var channel = myChannels[uniqueName]; // get the channel by uniqueName
+          showAsActiveChannel(channel);
+          $('#sidebar').addClass('sm-hide');
+          $('.sm-header.left').addClass('active');
+          $('#page-wrapper').addClass('sm-hide');
+        }
         $('#chat-input').focus(); // be ready to type regardless if already on clicked channel
       });
     }
@@ -372,13 +374,13 @@ $(function() {
       } else {
         console.log('joinedChannels count: ' + joinedChannelsCount);
         // console.log(joinedChannels);
-        sortChannelsByLastMessage(joinedChannels, 'joinedChannels');
+        sortChannelsByLastMessage(joinedChannels, '#messages-sidebar', '#messages-container');
         console.log('knownChannelsCount count: ' + knownChannelsCount);
         // console.log(knownChannels);
-        // sortChannelsByLastMessage(knownChannels, 'knownChannels');
+        sortChannelsByLastMessage(knownChannels, '#inbox-sidebar', '#inbox-container');
         console.log('otherChannelsCount count: ' + otherChannelsCount);
         // console.log(otherChannels);
-        sortChannelsByLastMessage(otherChannels, 'otherChannels');
+        // sortChannelsByLastMessage(otherChannels, 'otherChannels');
         console.log('emptyChannelsCount count: ' + emptyChannelsCount);
         // console.log(emptyChannels);
         console.log('totalChannels: ' + totalChannels);
@@ -388,31 +390,13 @@ $(function() {
 
     function getChannelStatus(channel){
       index++;
-      debugger
       var status = channel.status;
       var msg_length = channel.messages.length;
       console.log(channel.friendlyName + ': ' + msg_length + ' messages, status: ' + status);
       if (status == 'joined'){
-        console.log('joined')
-        if (channel.friendlyName == 'hello'){
-          console.log('~~~~~~~~~~~~~~~~~~~~~FUCK');
-          console.log(channel.friendlyName + ': ' + channel.messages.length);
-        }
-        if (channel.messages.length === 0){
-          console.log('no messages');
-          console.log(channel.friendlyName);
-          channel.leave();
-          otherChannels.push(channel);
-          otherChannelsCount++;
-        } else {
-          if (channel.friendlyName == 'hello'){
-            console.log('~~~~~~~~~~~~~~~~~~~~~SHIT');
-            console.log(channel.friendlyName + ': ' + channel.messages.length);
-          }
-          myChannels[channel.uniqueName] = channel;
-          joinedChannels.push(channel);
-          joinedChannelsCount++;
-        }
+        myChannels[channel.uniqueName] = channel;
+        joinedChannels.push(channel);
+        joinedChannelsCount++;
       } else if (status == 'known'){
         myChannels[channel.uniqueName] = channel;
         knownChannels.push(channel);
@@ -425,45 +409,28 @@ $(function() {
       nextChannel();
     }
 
-    function sortChannelsByLastMessage(channels, str){
-      channels.forEach(function(ch, i){
-        var l = ch.messages.length;
-        if (l === 0){
-          console.log(ch.friendlyName);
-          console.log(ch.createdBy);
-          debugger
-          if (ch.createdBy == username){
-            deleteChannel(ch).then(function(){
-              console.log('deleted!');
-            });
-          }
-        }
-      });
+    function sortChannelsByLastMessage(channels, sidebar, messageBoard){
       channels.sort(function(a, b){
-        console.log(a.friendlyName);
-        var al = a.messages.length;
-        if (al === 0){
-          console.log(a.createdBy);
-          debugger
-          if (a.createdBy == username){
-            deleteChannel(a).then(function(){
-              console.log('deleted!');
-            });
-            return false;
-          }
+        var al = a.messages.length,
+        channelA,
+        bl = b.messages.length,
+        channelB;
+        if (al > 0){
+          channelA = a.messages[al-1].timestamp;
+        } else {
+          console.log(':*(');
+          channelA = a.messages[al-1].dateCreated;
         }
-        var channelA = a.messages[al-1].timestamp;
-        var bl = b.messages.length;
-        var channelB = b.messages[bl-1].timestamp;
+        channelB = b.messages[bl-1].timestamp;
         return channelA > channelB ? 1 : -1;
       });
-      moreIniz(channels);
+      moreIniz(channels, sidebar, messageBoard);
     }
 
-    function moreIniz(channels){
-      var myChannelsSidebar = $('#messages-sidebar');
+    function moreIniz(channels, sidebar, messageBoard){
+      var myChannelsSidebar = $(sidebar);
       myChannelsSidebar.find('.loading').remove();
-      var channelMessageBoard = $('#messages-container');
+      var channelMessageBoard = $(messageBoard);
       for (i = 0; i < channels.length; i++){
         var channel = channels[i];
         buildChannelButton(channel, myChannelsSidebar);
@@ -554,8 +521,9 @@ $(function() {
       joinChannel(channel);
       $.when(joinAndInit).then(function(){
         joinAndInit = false;
-        console.log('gunu init');
+        console.log('gunu init nu');
         initChannelOptions(channel);
+        sidebarChannelMessagesListener(channel);
       });
     }
 
@@ -569,8 +537,8 @@ $(function() {
 
     function initChannelOptions(channel){
       console.log('init \'' + channel.friendlyName + '\' channel options');
-      messagesListener(channel);
       sendStoredMessages(channel);
+      messagesListener(channel);
       sendChannelMessage();
       leaveChannelListener(channel);
       deleteChannelListener(channel);
