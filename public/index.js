@@ -164,7 +164,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM5NTE2MjEiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1Mzk1NTIyMSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.U0HsagRWImUe_h4h_SmEaiem10FwsoJccALyWd2Y1tA';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTQwNDY3NTAiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1NDA1MDM1MCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVNlYTk0ZDc2MzQ3OTQ0NjZjOTM3MDE5NzcyZDZhYTUyOSIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.8B6vJHbyI0mIPBzhZnF-aOvgEzWBEzHzFLKeNLdzxn4';
 
       $('.info').remove();
       username = data.identity;
@@ -190,7 +190,7 @@ $(function() {
         e.stopImmediatePropagation();
         if (e.keyCode == 13) {
           if (input.val() == 'login'){
-            conciergeLogin = true;
+            conciergeLogin = true; // to listen for other channels
             input.unbind(); // take off login or new channel
             navListener();
             getAllChannels();
@@ -322,7 +322,10 @@ $(function() {
       storeactiveNavContainerChannel($chatWindow);
 
       // set last index the user has seen
-      myChannel.updateLastConsumedMessageIndex(myChannel.messages.length - 1);
+      if (!newChannel){
+        var messagesLength = myChannel.messages.length;
+        myChannel.updateLastConsumedMessageIndex(messagesLength - 1);
+      }
     }
 
     function showAsActiveWindowHeader(channel){
@@ -338,10 +341,8 @@ $(function() {
       chatWindows[nav] = $chatWindow;
     }
 
-    var totalChannels;
-    var myChannelsCount = 0;
-    var emptyChannelsCount = 0;
-    var allChannels;
+    var totalChannels,
+    allChannels;
 
     function getAllChannels(){
       messagingClient.getChannels().then(function(channels) {
@@ -354,199 +355,124 @@ $(function() {
       channelEventsListener();
     }
 
-    var index = 0;
+    var index = 0,
+    joinedChannels = [],
+    knownChannels = [],
+    otherChannels = [],
+    emptyChannels = [],
+    joinedChannelsCount = 0,
+    knownChannelsCount = 0,
+    otherChannelsCount = 0,
+    emptyChannelsCount = 0;
+
     function nextChannel(){
-      if (index < allChannels.length){
+      if (index < totalChannels){
         var channel = allChannels[index];
-        checkIfJoinedChannel(channel);
+        getChannelStatus(channel);
+      } else {
+        console.log('joinedChannels count: ' + joinedChannelsCount);
+        // console.log(joinedChannels);
+        sortChannelsByLastMessage(joinedChannels, 'joinedChannels');
+        console.log('knownChannelsCount count: ' + knownChannelsCount);
+        // console.log(knownChannels);
+        // sortChannelsByLastMessage(knownChannels, 'knownChannels');
+        console.log('otherChannelsCount count: ' + otherChannelsCount);
+        // console.log(otherChannels);
+        sortChannelsByLastMessage(otherChannels, 'otherChannels');
+        console.log('emptyChannelsCount count: ' + emptyChannelsCount);
+        // console.log(emptyChannels);
+        console.log('totalChannels: ' + totalChannels);
+        console.log('gonna init');
       }
     }
 
-    function checkIfJoinedChannel(channel){
-      var ch = channel;
+    function getChannelStatus(channel){
       index++;
-      // if (channel.friendlyName == 'booyah'){
+      debugger
+      var status = channel.status;
+      var msg_length = channel.messages.length;
+      console.log(channel.friendlyName + ': ' + msg_length + ' messages, status: ' + status);
+      if (status == 'joined'){
+        console.log('joined')
+        if (channel.friendlyName == 'hello'){
+          console.log('~~~~~~~~~~~~~~~~~~~~~FUCK');
+          console.log(channel.friendlyName + ': ' + channel.messages.length);
+        }
+        if (channel.messages.length === 0){
+          console.log('no messages');
+          console.log(channel.friendlyName);
+          channel.leave();
+          otherChannels.push(channel);
+          otherChannelsCount++;
+        } else {
+          if (channel.friendlyName == 'hello'){
+            console.log('~~~~~~~~~~~~~~~~~~~~~SHIT');
+            console.log(channel.friendlyName + ': ' + channel.messages.length);
+          }
+          myChannels[channel.uniqueName] = channel;
+          joinedChannels.push(channel);
+          joinedChannelsCount++;
+        }
+      } else if (status == 'known'){
+        myChannels[channel.uniqueName] = channel;
+        knownChannels.push(channel);
+        knownChannelsCount++;
+      } else {
+        otherChannels.push(channel);
+        otherChannelsCount++;
         debugger
-      // }
-      if (ch.members.size > 1){
-        channel.getMembers().then(function(members){
-          for (var i = members.length - 1; i >= 0; i--) {
-            member = members[i];
-            if (member.identity === username){ // TODO: find better method of getting the current user than by name
-              myChannels[ch.uniqueName] = ch;
-              myChannelsCount++;
-              initOrNext();
-            }
+      }
+      nextChannel();
+    }
+
+    function sortChannelsByLastMessage(channels, str){
+      channels.forEach(function(ch, i){
+        var l = ch.messages.length;
+        if (l === 0){
+          console.log(ch.friendlyName);
+          console.log(ch.createdBy);
+          debugger
+          if (ch.createdBy == username){
+            deleteChannel(ch).then(function(){
+              console.log('deleted!');
+            });
           }
-        });
-      } else {
-        // TODO: push to unassigned from here
-        emptyChannelsCount++;
-        initOrNext();
-      }
-    }
-
-    function initOrNext(){
-      console.log('index: ' + index);
-      console.log('totalChannels: ' + totalChannels);
-      console.log('myChannelsCount: ' + myChannelsCount);
-      console.log('emptyChannelsCount: ' + emptyChannelsCount);
-      if (index === totalChannels){ // gone through all channels
-        if (myChannelsCount === 0){
-          $('.loading').text('Twilio error, please refresh');
-        } else {
-          console.log('gonna init');
-          initMyChannels();
         }
-      } else {
-        nextChannel();
-      }
-    }
-
-    function initMyChannels(){
-      console.log('init my channels');
-      for (var channel in myChannels){
-        var ch = myChannels[channel];
-        getLastChannelMessage(ch); // sort desc
-        sidebarChannelMessagesListener(ch); // arrange notifications; unshift
-      }
-    }
-
-    var channelsToSortByLastUpdate = [];
-    var channelsIAmNotIn = [];
-    var channelsTaken = [];
-    function getLastChannelMessage(channel){
-      console.log('getting message');
-      channel.getMessages().then(function(messages) {
-        var channelWithLastUpdate = {};
-        channelWithLastUpdate.channel = channel;
-        if (messages.length > 0){
-          channelWithLastUpdate.lastUpdate = messages[0].timestamp;
-        } else {
-          channelWithLastUpdate.lastUpdate = channel.dateCreated;
-        }
-        if (findMeInMessages(messages) == 1){
-          channelsToSortByLastUpdate.push(channelWithLastUpdate);
-        } else if (findMeInMessages(messages) == 2){
-          console.log('someone else has ' + channel.friendlyName);
-          channelsTaken.push(channelWithLastUpdate);
-        } else {
-          console.log('I have no messages in ' + channel.friendlyName);
-          channelsIAmNotIn.push(channelWithLastUpdate);
-        }
-        sortChannelList();
       });
-    }
-
-    function findMeInMessages(messages){
-      var uniqeMembers = []; // unique members in this channel
-      var memberCount = 0;
-      for (var i = messages.length - 1; i >= 0; i--) {
-        var message = messages[i];
-        var messageAuthor = message.author;
-        if (messageAuthor == username){ // if I have any messages
-          return 1; // end it right here
-        }
-        if (jQuery.inArray(messageAuthor, uniqeMembers)){ // if member already counted in array
-          memberCount++;
-          uniqeMembers.push(messageAuthor);
-          if (memberCount > 1){ // if someone is in the chat with the customer
-            return 2;
+      channels.sort(function(a, b){
+        console.log(a.friendlyName);
+        var al = a.messages.length;
+        if (al === 0){
+          console.log(a.createdBy);
+          debugger
+          if (a.createdBy == username){
+            deleteChannel(a).then(function(){
+              console.log('deleted!');
+            });
+            return false;
           }
         }
-      }
-    }
-
-    function sortChannelList(){
-      if (myChannelsCount === channelsToSortByLastUpdate.length + channelsIAmNotIn.length){
-        console.log(channelsToSortByLastUpdate);
-        console.log(channelsIAmNotIn);
-        // sortChannelListByDate(channelsToSortByLastUpdate);
-        channelsToSortByLastUpdate.sort(function(a, b){
-          var channelA = a.lastUpdate;
-          var channelB = b.lastUpdate;
-          if (channelA > channelB){
-            console.log(a.channel.friendlyName + ': ' + a.lastUpdate + ' > ' + b.channel.friendlyName + ': ' + b.lastUpdate);
-          } else {
-            console.log(a.channel.friendlyName + ': ' + a.lastUpdate + ' < ' + b.channel.friendlyName + ': ' + b.lastUpdate);
-          }
-          return channelA > channelB ? 1 : -1;
-        });
-        var myChannelsSidebar = $('#messages-sidebar');
-        myChannelsSidebar.find('.loading').remove();
-        var channelMessageBoard = $('#messages-container');
-        for (i = 0; i < channelsToSortByLastUpdate.length; i++){
-          var channel = channelsToSortByLastUpdate[i].channel;
-          buildChannelButton(channel, myChannelsSidebar);
-          buildChannelPage(channel, channelMessageBoard);
-          initChannelOptions(channel);
-          getChannelMessages(channel);
-        }
-        joinExistingChannelListener();
-        sortUnassigned();
-        sortTaken();
-      } else {
-        // console.log('myChannels length: ' + myChannelsCount);
-        // console.log('channelsToSortByLastUpdate length: ' + channelsToSortByLastUpdate.length);
-      }
-    }
-
-    function sortUnassigned(){
-      console.log(channelsIAmNotIn);
-      // sortChannelListByDate(channelsIAmNotIn);
-      channelsIAmNotIn.sort(function(a, b){
-        var channelA = a.lastUpdate;
-        var channelB = b.lastUpdate;
-        if (channelA > channelB){
-          console.log(a.channel.friendlyName + ': ' + a.lastUpdate + ' > ' + b.channel.friendlyName + ': ' + b.lastUpdate);
-        } else {
-          console.log(a.channel.friendlyName + ': ' + a.lastUpdate + ' < ' + b.channel.friendlyName + ': ' + b.lastUpdate);
-        }
+        var channelA = a.messages[al-1].timestamp;
+        var bl = b.messages.length;
+        var channelB = b.messages[bl-1].timestamp;
         return channelA > channelB ? 1 : -1;
       });
-      var myInboxContainer = $('#inbox-sidebar');
-      myInboxContainer.find('.loading').remove();
-      var channelMessageBoard = $('#inbox-container');
-      for (i = 0; i < channelsIAmNotIn.length; i++){
-        var channel = channelsIAmNotIn[i].channel;
-        buildChannelButton(channel, myInboxContainer);
+      moreIniz(channels);
+    }
+
+    function moreIniz(channels){
+      var myChannelsSidebar = $('#messages-sidebar');
+      myChannelsSidebar.find('.loading').remove();
+      var channelMessageBoard = $('#messages-container');
+      for (i = 0; i < channels.length; i++){
+        var channel = channels[i];
+        buildChannelButton(channel, myChannelsSidebar);
         buildChannelPage(channel, channelMessageBoard);
         initChannelOptions(channel);
         getChannelMessages(channel);
+        sidebarChannelMessagesListener(channel);
       }
       joinExistingChannelListener();
-    }
-
-    function sortTaken(){
-      console.log(channelsTaken);
-      // sortChannelListByDate(channelsTaken);
-      channelsTaken.sort(function(a, b){
-        var channelA = a.lastUpdate;
-        var channelB = b.lastUpdate;
-        if (channelA > channelB){
-          console.log(a.channel.friendlyName + ': ' + a.lastUpdate + ' > ' + b.channel.friendlyName + ': ' + b.lastUpdate);
-        } else {
-          console.log(a.channel.friendlyName + ': ' + a.lastUpdate + ' < ' + b.channel.friendlyName + ': ' + b.lastUpdate);
-        }
-        return channelA > channelB ? 1 : -1;
-      });
-      var myTeamContainer = $('#team-sidebar');
-      myTeamContainer.find('.loading').remove();
-      var channelMessageBoard = $('#team-container');
-      for (i = 0; i < channelsTaken.length; i++){
-        var channel = channelsTaken[i].channel;
-        buildChannelButton(channel, myTeamContainer);
-        buildChannelPage(channel, channelMessageBoard);
-      }
-      joinExistingChannelListener();
-    }
-
-    function sortChannelListByDate(channels){
-      // channels.sort(function(a, b){
-      //   var channelA = a.lastUpdate;
-      //   var channelB = b.lastUpdate;
-      //   return channelA > channelB ? 1 : -1;
-      // });
     }
 
     function buildChannelButton(channel, sidebar){
@@ -615,8 +541,8 @@ $(function() {
           joinAndInit = false;
           console.log('gunu init');
           initChannelOptions(channel);
+          showAsActiveChannel(channel);
         });
-        showAsActiveChannel(channel);
       });
     }
 
@@ -643,8 +569,8 @@ $(function() {
 
     function initChannelOptions(channel){
       console.log('init \'' + channel.friendlyName + '\' channel options');
-      sendStoredMessages(channel);
       messagesListener(channel);
+      sendStoredMessages(channel);
       sendChannelMessage();
       leaveChannelListener(channel);
       deleteChannelListener(channel);
@@ -665,11 +591,9 @@ $(function() {
       console.log('getting channel messages, bro');
       channel.getMessages().then(function(messages) {
         var totalMessages = messages.length;
-        // print('Total Messages: ' + totalMessages, true, storedMessageBoards[channel.uniqueName]);
         for (i=0; i<totalMessages; i++) {
           var message = messages[i];
           printMessage(message.author, message.dateUpdated, message.body, storedMessageBoards[channel.uniqueName]);
-          // TODO: set message index
         }
 
         var myLastIndex = channel.lastConsumedMessageIndex;
