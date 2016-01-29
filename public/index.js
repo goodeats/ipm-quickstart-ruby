@@ -23,7 +23,7 @@ $(function() {
   var storedButtons = {}; // stores all buttons by uniqueName as key
   var storedMessageBoards = {}; // stores all message boards by uniqueName as key
   var newChannel = false;
-  var newChannelMessages = []; // stores messages sent while the channel is being created
+  var newChannelMessages = {}; // stores messages sent while the channel is being created
   var conciergeLogin = false;
 
   // The server will assign the client a random username - store that value
@@ -164,7 +164,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTQwNDgwMzIiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1NDA1MTYzMiwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVNlYTk0ZDc2MzQ3OTQ0NjZjOTM3MDE5NzcyZDZhYTUyOSIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.QyI_4ervg80RjAF_OTWfX9w3etK8zsTiCO7R7uzYIpk';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTQwNTU1NzUiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1NDA1OTE3NSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVNlYTk0ZDc2MzQ3OTQ0NjZjOTM3MDE5NzcyZDZhYTUyOSIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.lHHiTifCzyxtV5uop9tSJvh-I_LDzXNk8Yer2KzAsBA';
 
       $('.info').remove();
       username = data.identity;
@@ -185,6 +185,8 @@ $(function() {
 
     var canCreateChannel = true;
     function prepareInput(){
+      var uniqueName = 'newchat-' + Date.now().toString(); // TODO: add merchant name
+      newChannelMessages[uniqueName] = [];
       var input = $('#chat-input');
       input.on('keydown', function(e) {
         e.stopImmediatePropagation();
@@ -199,9 +201,8 @@ $(function() {
             $('#content').addClass('sidebar-active');
             $('#page-wrapper').addClass('logged-in');
           } else {
-            var uniqueName = 'newchat-' + Date.now().toString(); // TODO: add merchant name
             var friendlyName = input.val();
-            newChannelMessages.push(input.val());
+            newChannelMessages[uniqueName].push(input.val());
             if (canCreateChannel){
               canCreateChannel = false;
               createChannelAndJoin(uniqueName, friendlyName);
@@ -370,6 +371,7 @@ $(function() {
     function nextChannel(){
       if (index < totalChannels){
         var channel = allChannels[index];
+        newChannelMessages[channel.uniqueName] = [];
         getChannelStatus(channel);
       } else {
         console.log('joinedChannels count: ' + joinedChannelsCount);
@@ -410,6 +412,7 @@ $(function() {
     }
 
     function sortChannelsByLastMessage(channels, sidebar, messageBoard){
+      // TODO: knownchannels don't have messages: join/do this/leave
       channels.sort(function(a, b){
         var al = a.messages.length,
         channelA,
@@ -418,10 +421,15 @@ $(function() {
         if (al > 0){
           channelA = a.messages[al-1].timestamp;
         } else {
-          console.log(':*(');
-          channelA = a.messages[al-1].dateCreated;
+          console.log(a.friendlyName + ' :*( - a');
+          channelA = a.messages.dateCreated;
         }
-        channelB = b.messages[bl-1].timestamp;
+        if (bl > 0){
+          channelB = b.messages[bl-1].timestamp;
+        } else {
+          console.log(b.friendlyName + ' :*( - b');
+          channelB = b.messages.dateCreated;
+        }
         return channelA > channelB ? 1 : -1;
       });
       moreIniz(channels, sidebar, messageBoard);
@@ -466,7 +474,7 @@ $(function() {
           moveToMessages(channel);
           returnToDefaultNavChannel('inbox'); // show inbox init channel
           showAsActiveNav('messages'); // switch nav back to messages
-          showAsActiveChannel(channel); // TODO: show this channel as active
+          showAsActiveChannel(channel);
         } else {
           moveToFirst(channelMessageButton);
         }
@@ -487,7 +495,7 @@ $(function() {
       });
     }
 
-    var joinAndInit = false;
+    var joinAndInit = {};
     function createChannelAndJoin(uniqueName, friendlyName){
       console.log('creating a channel');
       messagingClient.createChannel({
@@ -504,8 +512,7 @@ $(function() {
         storedButtons[channel.uniqueName].addClass('pending');
         joinExistingChannelListener();
         joinChannel(channel);
-        $.when(joinAndInit).then(function(){
-          joinAndInit = false;
+        $.when(joinAndInit[channel.uniqueName]).then(function(){
           console.log('gunu init');
           initChannelOptions(channel);
           showAsActiveChannel(channel);
@@ -516,23 +523,37 @@ $(function() {
     function initNewChannel(channel){
       buildChannelButton(channel, $('#inbox-sidebar'));
       buildChannelPage(channel, $('#inbox-container'));
-      // TODO: wait for message to be added from user
       joinExistingChannelListener();
+      joinThenLeave(channel);
+    }
+
+    function joinThenLeave(channel){
       joinChannel(channel);
-      $.when(joinAndInit).then(function(){
-        joinAndInit = false;
+      $.when(joinAndInit[channel.uniqueName]).then(function(){
         console.log('gunu init nu');
+        initChannelOptions(channel);
+        sidebarChannelMessagesListener(channel);
+        leaveChannel(channel);
+      });
+    }
+
+    function joinThenStay(channel){
+      joinChannel(channel);
+      $.when(joinAndInit[channel.uniqueName]).then(function(){
+        console.log('gunu init nu, stay');
         initChannelOptions(channel);
         sidebarChannelMessagesListener(channel);
       });
     }
 
     function joinChannel(ch) {
-      console.log('joining channel');
-      ch.join().then(function(channel) {
-        print('Joined ' + channel.friendlyName + ' as <span class="me">' + username + '</span>.', true, storedMessageBoards[channel.uniqueName]);
-        joinAndInit = true;
-      });
+      if (!joinAndInit[ch.uniqueName]){ // to prevent repeat joins
+        console.log('joining channel');
+        ch.join().then(function(channel) {
+          print('Joined ' + channel.friendlyName + ' as <span class="me">' + username + '</span>.', true, storedMessageBoards[channel.uniqueName]);
+          joinAndInit[channel.uniqueName] = true;
+        });
+      }
     }
 
     function initChannelOptions(channel){
@@ -546,12 +567,15 @@ $(function() {
     }
 
     function sendStoredMessages(channel){
-      if (newChannel){
-        for (i = 0; i < newChannelMessages.length; i++) {
-          var message = newChannelMessages[i];
+      // debugger
+      var messages = newChannelMessages[channel.uniqueName];
+      if (messages.length > 0){
+        for (i = 0; i < messages.length; i++) {
+          var message = messages[i];
           channel.sendMessage(message);
           // TODO: show face
         }
+        messages = [];
       }
     }
 
@@ -603,7 +627,12 @@ $(function() {
       $input.on('keydown', function(e) {
         e.stopImmediatePropagation();
         if (e.keyCode == 13) {
-          myChannel.sendMessage($input.val());
+          if (myChannel.status === 'joined'){
+            myChannel.sendMessage($input.val());
+          } else {
+            newChannelMessages[myChannel.uniqueName].push($input.val());
+            joinThenStay(myChannel);
+          }
           $input.val('');
           // TODO: show face
         }
@@ -621,6 +650,7 @@ $(function() {
 
     function leaveChannel(channel){
       channel.leave().then(function(ch){
+        joinAndInit[ch.uniqueName] = false;
         console.log('I just left "' + ch.friendlyName + '"');
       });
     }
