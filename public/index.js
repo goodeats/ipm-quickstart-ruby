@@ -164,7 +164,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM5NDc5NTMiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1Mzk1MTU1MywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.BGeoLh-9p0G_lxLvF2Z152XnXUgcpe-uk4m6vty6KRg';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTM5NTE2MjEiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1Mzk1NTIyMSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVMwYjIzYzliYWJlYjU0M2U4OTBhMjY5ZjMzOWRlZTQxMCIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.U0HsagRWImUe_h4h_SmEaiem10FwsoJccALyWd2Y1tA';
 
       $('.info').remove();
       username = data.identity;
@@ -301,13 +301,17 @@ $(function() {
       uniqueChannel.addClass('active');
 
       // toggle button
-      activeSidebar.find('.join.active').removeClass('active');
+      var oldActiveButton = activeSidebar.find('.join.active');
+      oldActiveButton.removeClass('active');
+      oldActiveButton.find('.leave-channel').removeClass('active');
       var newActiveButton = storedButtons[channel.uniqueName];
       newActiveButton.toggleClass('pending active');
       newActiveButton.removeClass('unread-messages');
       var unreadCount = newActiveButton.find('.join-channel-unread-count');
       unreadCount.removeClass('active');
       unreadCount.text(0);
+      var leaveButton = newActiveButton.find('.leave-channel');
+      leaveButton.addClass('active');
 
       // toggle header
       showAsActiveWindowHeader(myChannel);
@@ -361,6 +365,9 @@ $(function() {
     function checkIfJoinedChannel(channel){
       var ch = channel;
       index++;
+      // if (channel.friendlyName == 'booyah'){
+        debugger
+      // }
       if (ch.members.size > 1){
         channel.getMembers().then(function(members){
           for (var i = members.length - 1; i >= 0; i--) {
@@ -546,6 +553,7 @@ $(function() {
       var channelButton = '<div id="join-' + channel.uniqueName + '" class="join" name="' + channel.friendlyName + '">' +
                             '<span class="join-channel-name">' + channel.friendlyName + '</span>' +
                             '<span class="join-channel-unread-count">0</span>' +
+                            '<span class="leave-channel"><i class="fa fa-times-circle-o"></i></span>' +
                           '</div>';
       sidebar.prepend(channelButton);
       storedButtons[channel.uniqueName] = $('#join-' + channel.uniqueName);
@@ -711,11 +719,11 @@ $(function() {
     }
 
     function leaveChannelListener(channel){
-      var leave_button = $('.leave');
-      leave_button.show();
+      var leave_button = $('.leave-channel');
       leave_button.on('click', function(e){
         e.preventDefault();
-        leaveChannel(channel);
+        var uniqueName = $(this).parent().attr('id').replace('join-', '');
+        leaveChannel(myChannels[uniqueName]);
       });
     }
 

@@ -231,6 +231,17 @@ html, body {
   display: block;
 }
 
+.leave-channel {
+  display: inline-block;
+  position: absolute;
+  left: 10px;
+  line-height: 40px;
+}
+
+.leave-channel.active {
+  display: inline-block;
+}
+
 /* message board */
 
 .content-container {
@@ -410,6 +421,10 @@ html, body {
   .join.active {
     background: #9674D8;
     color: #fff;
+  }
+
+  .leave-channel {
+    display: none;
   }
 
   /* message board */
