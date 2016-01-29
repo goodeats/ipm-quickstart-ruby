@@ -164,7 +164,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTQwNTU1NzUiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1NDA1OTE3NSwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVNlYTk0ZDc2MzQ3OTQ0NjZjOTM3MDE5NzcyZDZhYTUyOSIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.lHHiTifCzyxtV5uop9tSJvh-I_LDzXNk8Yer2KzAsBA';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTQwNjMwMDgiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1NDA2NjYwOCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVNlYTk0ZDc2MzQ3OTQ0NjZjOTM3MDE5NzcyZDZhYTUyOSIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.sEajKybdu36D66sflVlPJWehnj_voD4fsUovbYqvJqU';
 
       $('.info').remove();
       username = data.identity;
@@ -270,12 +270,12 @@ $(function() {
       storeactiveNavContainerChannel($chatWindow);
     }
 
-    function joinExistingChannelListener(){
+    function joinExistingChannelListener(e){
       var join = $('.join');
       join.on('click', function(e){
         e.stopImmediatePropagation();
         var this_button = $(this);
-        if (!this_button.hasClass('active')){
+        if (!this_button.hasClass('active') && e.target != $('.leave-channel')){
           this_button.addClass('pending');
           var uniqueName = this_button.attr('id').replace('join-', '');
           var channel = myChannels[uniqueName]; // get the channel by uniqueName
@@ -308,7 +308,8 @@ $(function() {
       oldActiveButton.removeClass('active');
       oldActiveButton.find('.leave-channel').removeClass('active');
       var newActiveButton = storedButtons[channel.uniqueName];
-      newActiveButton.toggleClass('pending active');
+      newActiveButton.removeClass('pending');
+      newActiveButton.addClass('active');
       newActiveButton.removeClass('unread-messages');
       var unreadCount = newActiveButton.find('.join-channel-unread-count');
       unreadCount.removeClass('active');
@@ -471,7 +472,7 @@ $(function() {
         var channelMessageButton = storedButtons[message.channel.uniqueName];
         var channelMessageBoard = storedMessageBoards[message.channel.uniqueName];
         if (channelMessageBoard.parent()[0] == $('#inbox-container')[0] && message.author == username){
-          moveToMessages(channel);
+          moveToAnotherNav(channel, 'messages');
           returnToDefaultNavChannel('inbox'); // show inbox init channel
           showAsActiveNav('messages'); // switch nav back to messages
           showAsActiveChannel(channel);
@@ -512,8 +513,10 @@ $(function() {
         storedButtons[channel.uniqueName].addClass('pending');
         joinExistingChannelListener();
         joinChannel(channel);
-        $.when(joinAndInit[channel.uniqueName]).then(function(){
+        // $.when(joinAndInit[channel.uniqueName] = true).then(function(){
+        $.when(channel.status == 'joined').then(function(){
           console.log('gunu init');
+          sendStoredMessages(channel);
           initChannelOptions(channel);
           showAsActiveChannel(channel);
         });
@@ -529,8 +532,10 @@ $(function() {
 
     function joinThenLeave(channel){
       joinChannel(channel);
-      $.when(joinAndInit[channel.uniqueName]).then(function(){
+      // $.when(joinAndInit[channel.uniqueName] = true).then(function(){
+      $.when(channel.status == 'joined').then(function(){
         console.log('gunu init nu');
+        sendStoredMessages(channel);
         initChannelOptions(channel);
         sidebarChannelMessagesListener(channel);
         leaveChannel(channel);
@@ -538,27 +543,34 @@ $(function() {
     }
 
     function joinThenStay(channel){
+      console.log('join then stay');
       joinChannel(channel);
-      $.when(joinAndInit[channel.uniqueName]).then(function(){
+      // $.when(joinAndInit[channel.uniqueName] = true).then(function(){
+      $.when(channel.status === 'joined').then(function(){
         console.log('gunu init nu, stay');
-        initChannelOptions(channel);
+        sendStoredMessages(channel);
+        if (channel.status != 'joined'){ // super hacky for channels you leave then want to rejoin
+          initChannelOptions(channel);
+        }
         sidebarChannelMessagesListener(channel);
       });
     }
 
     function joinChannel(ch) {
-      if (!joinAndInit[ch.uniqueName]){ // to prevent repeat joins
-        console.log('joining channel');
+      joinAndInit[ch.uniqueName] = false;
+      // if (!joinAndInit[ch.uniqueName]){ // to prevent repeat joins
+      //   console.log('joining channel');
         ch.join().then(function(channel) {
+          console.log('its done Im in ' + channel.friendlyName);
           print('Joined ' + channel.friendlyName + ' as <span class="me">' + username + '</span>.', true, storedMessageBoards[channel.uniqueName]);
           joinAndInit[channel.uniqueName] = true;
         });
-      }
+      // }
     }
 
     function initChannelOptions(channel){
       console.log('init \'' + channel.friendlyName + '\' channel options');
-      sendStoredMessages(channel);
+      // sendStoredMessages(channel);
       messagesListener(channel);
       sendChannelMessage();
       leaveChannelListener(channel);
@@ -567,8 +579,8 @@ $(function() {
     }
 
     function sendStoredMessages(channel){
-      // debugger
       var messages = newChannelMessages[channel.uniqueName];
+      newChannelMessages[channel.uniqueName] = [];
       if (messages.length > 0){
         for (i = 0; i < messages.length; i++) {
           var message = messages[i];
@@ -608,6 +620,7 @@ $(function() {
 
     function messagesListener(channel){
       channel.on('messageAdded', function(message) {
+        console.log('mofo');
         printMessage(message.author, message.dateUpdated, message.body, storedMessageBoards[channel.uniqueName]);
       });
     }
@@ -616,9 +629,9 @@ $(function() {
       item.parent().prepend(item);
     }
 
-    function moveToMessages(channel){
-      $('#messages-container').prepend(storedMessageBoards[channel.uniqueName]);
-      $('#messages-sidebar').prepend(storedButtons[channel.uniqueName]);
+    function moveToAnotherNav(channel, nav){
+      $('#' + nav + '-container').prepend(storedMessageBoards[channel.uniqueName]);
+      $('#' + nav + '-sidebar').prepend(storedButtons[channel.uniqueName]);
     }
 
     function sendChannelMessage(){
@@ -642,7 +655,8 @@ $(function() {
     function leaveChannelListener(channel){
       var leave_button = $('.leave-channel');
       leave_button.on('click', function(e){
-        e.preventDefault();
+        e.stopImmediatePropagation();
+        $(this).removeClass('active');
         var uniqueName = $(this).parent().attr('id').replace('join-', '');
         leaveChannel(myChannels[uniqueName]);
       });
@@ -650,8 +664,17 @@ $(function() {
 
     function leaveChannel(channel){
       channel.leave().then(function(ch){
-        joinAndInit[ch.uniqueName] = false;
-        console.log('I just left "' + ch.friendlyName + '"');
+        var firstPass = true;
+        if (firstPass){
+          firstPass = false;
+          joinAndInit[ch.uniqueName] = false;
+          console.log('I just left "' + ch.friendlyName + '"');
+          ch.removeAllListeners();
+          moveToAnotherNav(ch, 'inbox');
+          returnToDefaultNavChannel('messages'); // show messages init channel
+          returnToDefaultNavChannel('inbox'); // show inbox init channel
+          // joinThenLeave(ch);
+        }
       });
     }
 
