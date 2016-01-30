@@ -35,6 +35,9 @@ $(function() {
         },
         error: function(user, error) {
           console.log(error);
+          var warning = '<div class="login-warning">Wrong username or password</div>';
+          var pwd = $('.form-control[name="password"]');
+          pwd.after(warning);
         }
       });
     });

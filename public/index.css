@@ -376,8 +376,17 @@ html, body {
 }
 
 .form-signin-heading,
-.form-signin input {
+.form-signin input,
+.login-warning {
   display: block;
+  margin: 3px auto;
+}
+
+.login-warning {
+  width: 100px;
+  font-size: 12px;
+  font-style: italic;
+  color: red;
 }
 
 @media screen and (min-width: 400px){
