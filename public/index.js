@@ -1,25 +1,60 @@
 $(function() {
 
-  Parse.$ = jQuery;
+  $('.sign-in').on('click', function(){
+    console.log('clicked');
+    var signInForm = '<div class="sign-in-form-container">' +
+                '<form class="form-signin" role="form">' +
+                  '<span class="form-signin-heading">Please sign in</span>' +
+                  '<input type="text" name="username" class="form-control" placeholder="Username" required="" autofocus="">' +
+                  '<input type="password" name="password" class="form-control" placeholder="Password" required="">' +
+                  '<button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>' +
+                '</form>' +
+              '</div>';
+    $('#content').append(signInForm);
+    $('.form-control[name="username"]').focus();
+    Parse.$ = jQuery;
+    Parse.initialize('7fpaRtSWYuBFyScLuM6bdQlABI0Eocovo48qKhKc',
+                     'tcSFVd5sEeqr3gy8hD7MxEqjiFgXSqDR1RFr3RkJ');
+    initParseLogin();
+  });
 
-  Parse.initialize('7fpaRtSWYuBFyScLuM6bdQlABI0Eocovo48qKhKc',
-                   'tcSFVd5sEeqr3gy8hD7MxEqjiFgXSqDR1RFr3RkJ');
+  function initParseLogin(){
+    $('.form-signin').on('submit', function(e){
+      e.preventDefault();
+      // debugger
+      var data = $(this).serializeArray(),
+      username = data[0].value,
+      password = data[1].value;
+      console.log('wat');
+      Parse.User.logIn(username, password, {
+        success: function(user) {
+          console.log('Welcome!');
+          $('.sign-in-form-container').remove();
+          $('.sign-in').remove();
+          $('#content-footer').append('<span>Powered by OpenCity</span>');
+        },
+        error: function(user, error) {
+          console.log(error);
+        }
+      });
+    });
 
-  $('.form-signin').on('submit', function(e){
-    e.preventDefault();
-    var data = $(this).serializeArray(),
-    username = data[0].value,
-    password = data[1].value;
-    Parse.User.logIn(username, password, {
-      success: function(user) {
-        alert('Welcome!');
-      },
-      // If there is an error
-      error: function(user, error) {
-        console.log(error);
+    $('.sign-in-form-container').on('mouseup.modal', function(e){
+      var container = $('.form-signin');
+      if (!container.is(e.target) && container.has(e.target).length === 0){
+        console.log('clicked outside');
+        var signInForm = $(this).remove();
+        $(document).off('keyup.modal mouseup.modal');
       }
     });
-  });
+
+    $(document).on('keyup.modal', function(e){
+      if (e.keyCode == 27){ // esc key closes modal
+        $(document).off('keyup.modal mouseup.modal');
+        $('.sign-in-form-container').remove();
+      }
+    });
+  }
 
   // Get handle to the chat div
   var $chatWindow = $('#messages-messages');
