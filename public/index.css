@@ -26,13 +26,18 @@ html, body {
 #wrapper {
   display: none;
   position: relative;
-  height: 100%;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  /*height: 100%;*/
   width: 100%;
   max-width: 500px;
-  float: right;
+  /*float: right;*/
   padding:0;
   margin:0;
   font-family: 'Helvetica Neue', Helvetica, sans-serif;
+  z-index: 9999999999; /* place over all content on page in case it has z-indexes as well, tripple stamp a double stamp */
 }
 
 #wrapper.active {
@@ -325,13 +330,14 @@ html, body {
   position: absolute;
   bottom: 0;
   background: #8762d3;
+  text-align: center;
 }
 
 #chat-input {
   display: block;
   width: 95%;
-  height: 72px;
-  position: absolute;
+  height: 40px;
+  position: relative;
   bottom: 0;
   margin: 10px 2.5%;
   outline: none;
@@ -344,6 +350,10 @@ html, body {
   word-break: break-word;
   resize: none;
   overflow: hidden;
+}
+
+.sign-in {
+  text-decoration: none;
 }
 
 @media screen and (min-width: 400px){

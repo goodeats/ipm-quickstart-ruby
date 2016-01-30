@@ -1,4 +1,26 @@
 $(function() {
+
+  Parse.$ = jQuery;
+
+  Parse.initialize('7fpaRtSWYuBFyScLuM6bdQlABI0Eocovo48qKhKc',
+                   'tcSFVd5sEeqr3gy8hD7MxEqjiFgXSqDR1RFr3RkJ');
+
+  $('.form-signin').on('submit', function(e){
+    e.preventDefault();
+    var data = $(this).serializeArray(),
+    username = data[0].value,
+    password = data[1].value;
+    Parse.User.logIn(username, password, {
+      success: function(user) {
+        alert('Welcome!');
+      },
+      // If there is an error
+      error: function(user, error) {
+        console.log(error);
+      }
+    });
+  });
+
   // Get handle to the chat div
   var $chatWindow = $('#messages-messages');
   var chatWindows = {'messages': $chatWindow,
@@ -164,7 +186,7 @@ $(function() {
     }, function(data) {
       // testing localhost needs token generated here:
       // https://www.twilio.com/user/account/ip-messaging/dev-tools/testing-tools
-      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTQwNjMwMDgiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1NDA2NjYwOCwiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVNlYTk0ZDc2MzQ3OTQ0NjZjOTM3MDE5NzcyZDZhYTUyOSIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.sEajKybdu36D66sflVlPJWehnj_voD4fsUovbYqvJqU';
+      data.token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiIsImN0eSI6InR3aWxpby1mcGE7dj0xIn0.eyJqdGkiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmLTE0NTQxNzA1MzMiLCJpc3MiOiJTSzU5YTgyZmUzYzZmMzNmMGZjNzA2NTg4NzBlMDg0MDFmIiwic3ViIjoiQUM1NmE0OTZhNjhlYTA1NjZkZGY1MTU4YjRlNzM3ZDI3ZiIsImV4cCI6MTQ1NDE3NDEzMywiZ3JhbnRzIjp7ImlkZW50aXR5IjoicGF0IiwiaXBfbWVzc2FnaW5nIjp7InNlcnZpY2Vfc2lkIjoiSVNlYTk0ZDc2MzQ3OTQ0NjZjOTM3MDE5NzcyZDZhYTUyOSIsImVuZHBvaW50X2lkIjoiaXAtbWVzc2FnaW5nLWRlbW86cGF0OmRlbW8tZGV2aWNlIn19fQ.8xE_hdLoRS9KRcxc5_Pr8spLQ4JVZWzdNCQsV6CeEus';
 
       $('.info').remove();
       username = data.identity;
@@ -513,7 +535,6 @@ $(function() {
         storedButtons[channel.uniqueName].addClass('pending');
         joinExistingChannelListener();
         joinChannel(channel);
-        // $.when(joinAndInit[channel.uniqueName] = true).then(function(){
         $.when(channel.status == 'joined').then(function(){
           console.log('gunu init');
           sendStoredMessages(channel);
@@ -532,9 +553,9 @@ $(function() {
 
     function joinThenLeave(channel){
       joinChannel(channel);
-      // $.when(joinAndInit[channel.uniqueName] = true).then(function(){
       $.when(channel.status == 'joined').then(function(){
-        console.log('gunu init nu');
+        console.log('init new ch');
+        debugger
         sendStoredMessages(channel);
         initChannelOptions(channel);
         sidebarChannelMessagesListener(channel);
@@ -545,9 +566,9 @@ $(function() {
     function joinThenStay(channel){
       console.log('join then stay');
       joinChannel(channel);
-      // $.when(joinAndInit[channel.uniqueName] = true).then(function(){
       $.when(channel.status === 'joined').then(function(){
-        console.log('gunu init nu, stay');
+        console.log('init new ch, stay');
+        debugger
         sendStoredMessages(channel);
         if (channel.status != 'joined'){ // super hacky for channels you leave then want to rejoin
           initChannelOptions(channel);
@@ -581,7 +602,7 @@ $(function() {
     function sendStoredMessages(channel){
       var messages = newChannelMessages[channel.uniqueName];
       newChannelMessages[channel.uniqueName] = [];
-      if (messages.length > 0){
+      if (messages && messages.length > 0){
         for (i = 0; i < messages.length; i++) {
           var message = messages[i];
           channel.sendMessage(message);
@@ -620,7 +641,6 @@ $(function() {
 
     function messagesListener(channel){
       channel.on('messageAdded', function(message) {
-        console.log('mofo');
         printMessage(message.author, message.dateUpdated, message.body, storedMessageBoards[channel.uniqueName]);
       });
     }
